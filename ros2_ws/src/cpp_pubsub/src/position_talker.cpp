@@ -49,7 +49,7 @@ public:
   
 
   // sine curve's first point is currently all the same
-  std::vector<double> first_point {0.06, -0.16, -0.01};
+  // std::vector<double> first_point {0.06, -0.16, -0.01};
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,10 +74,10 @@ public:
     print_params();
 
     // update first point if not using depth
-    if (use_depth == 0) first_point = {0.01, -0.16, -0.01};
+    // if (use_depth == 0) first_point = {0.01, -0.16, -0.01};
 
     // update centering position using "post_point" computed above
-    for (size_t i=0; i<3; i++) centering.at(i) = first_point.at(i) / mapping_ratio;
+    // for (size_t i=0; i<3; i++) centering.at(i) = first_point.at(i) / mapping_ratio;
 
     // publisher
     publisher_ = this->create_publisher<tutorial_interfaces::msg::Falconpos>("falcon_position", 10);
@@ -223,7 +223,8 @@ int main(int argc, char * argv[])
   // {x, y, z} = {1, 2, 3} DOFS = {in/out, left/right, up/down}
   // positive axes directions are {out, right, up}
 
-  int choice = 0;
+  // int choice = 0;
+  int choice = 1;      // in/out direction locked
 
   ///////////////// CHOOSE YOUR MODE! /////////////////
 

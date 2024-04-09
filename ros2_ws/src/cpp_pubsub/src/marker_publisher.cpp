@@ -17,6 +17,11 @@ using namespace std::chrono_literals;
 
 
 /////////  functions to show markers in Rviz  /////////
+void generate_fitts_ring(visualization_msgs::msg::Marker &spheres, int num_targets, 
+                         double ring_radius, double target_width, int target_id);
+
+
+
 void generate_ref_ball(visualization_msgs::msg::Marker &ref_marker, double x, double y, double z, double d,
                        visualization_msgs::msg::Marker &traj_marker);
 
@@ -169,11 +174,65 @@ class MarkerPublisher : public rclcpp::Node
     rclcpp::Subscription<tutorial_interfaces::msg::PosInfo>::SharedPtr ref_sub_;
     rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr count_sub_;
 
+    visualization_msgs::msg::Marker fitts_marker_;
+
     visualization_msgs::msg::Marker traj_marker_;
     visualization_msgs::msg::Marker ref_marker_;
     visualization_msgs::msg::Marker tcp_marker_;
     
 };
+
+
+
+
+
+/////////////////////////////////// FUNCTIONS TO GENERATE FITTS RING ///////////////////////////////////
+void generate_fitts_ring(visualization_msgs::msg::Marker &spheres, int num_targets, 
+                         double ring_radius, double target_width, int target_id)
+{
+  // make sure the marker is cleared
+  spheres.clear();
+
+  // fill-in the spheres marker message
+  spheres.header.frame_id = "/panda_link0";
+  spheres.header.stamp = rclcpp::Clock().now();
+  spheres.ns = "marker_publisher";
+  spheres.action = visualization_msgs::msg::Marker::ADD;
+  spheres.pose.orientation.w = 1.0;
+  spheres.id = 0;
+  spheres.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+  spheres.scale.x = target_width / 2; // Sphere radius
+  spheres.scale.y = target_width / 2; // Sphere radius
+  spheres.scale.z = 0.2; // Not used for SPHERE_LIST
+
+  // Add different colors and positions for each sphere in the list
+  for (int i = 0; i < num_targets; i++) {
+    geometry_msgs::msg::Point p;
+    p.x = i * 0.5; // Position spheres along the x-axis
+    p.y = 0.0;
+    p.z = 0.0;
+    
+    // assign the correct color
+    std_msgs::msg::ColorRGBA color;
+    if (i==target_id) {
+      // target is red
+      color.r = 1.0;
+      color.a = 1.0;
+    } else {
+      // non-target is green
+      color.g = 1.0;
+      color.a = 1.0;
+    }
+
+    // add sphere and color to list
+    spheres.points.push_back(p);
+    spheres.colors.push_back(color);
+  }
+}
+
+
+
+
 
 
 /////////////////////////////////// FUNCTIONS TO GENERATE REFERENCE BALL ///////////////////////////////////
