@@ -1,2 +1,2 @@
 # HRI
-The official repository for the HRI project
+The official repository for the AutonomyFitts project
