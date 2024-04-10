@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/michael/HRI/ros2_ws/src/tutorial_interfaces
+CMAKE_SOURCE_DIR = /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/michael/HRI/ros2_ws/build/tutorial_interfaces
+CMAKE_BINARY_DIR = /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces
 
 # Utility rule file for tutorial_interfaces.
 
@@ -66,9 +66,9 @@ include CMakeFiles/tutorial_interfaces.dir/compiler_depend.make
 # Include the progress variables for this target.
 include CMakeFiles/tutorial_interfaces.dir/progress.make
 
-CMakeFiles/tutorial_interfaces: /home/michael/HRI/ros2_ws/src/tutorial_interfaces/msg/Falconpos.msg
-CMakeFiles/tutorial_interfaces: /home/michael/HRI/ros2_ws/src/tutorial_interfaces/msg/PosInfo.msg
-CMakeFiles/tutorial_interfaces: /home/michael/HRI/ros2_ws/src/tutorial_interfaces/srv/AddThreeInts.srv
+CMakeFiles/tutorial_interfaces: /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces/msg/Falconpos.msg
+CMakeFiles/tutorial_interfaces: /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces/msg/PosInfo.msg
+CMakeFiles/tutorial_interfaces: /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces/srv/AddThreeInts.srv
 CMakeFiles/tutorial_interfaces: rosidl_cmake/srv/AddThreeInts_Request.msg
 CMakeFiles/tutorial_interfaces: rosidl_cmake/srv/AddThreeInts_Response.msg
 CMakeFiles/tutorial_interfaces: /opt/ros/humble/share/geometry_msgs/msg/Accel.idl
@@ -114,6 +114,6 @@ CMakeFiles/tutorial_interfaces.dir/clean:
 .PHONY : CMakeFiles/tutorial_interfaces.dir/clean
 
 CMakeFiles/tutorial_interfaces.dir/depend:
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/michael/HRI/ros2_ws/src/tutorial_interfaces /home/michael/HRI/ros2_ws/src/tutorial_interfaces /home/michael/HRI/ros2_ws/build/tutorial_interfaces /home/michael/HRI/ros2_ws/build/tutorial_interfaces /home/michael/HRI/ros2_ws/build/tutorial_interfaces/CMakeFiles/tutorial_interfaces.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/CMakeFiles/tutorial_interfaces.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/tutorial_interfaces.dir/depend
 

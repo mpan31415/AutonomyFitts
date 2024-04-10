@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/michael/HRI/ros2_ws/src/tutorial_interfaces
+CMAKE_SOURCE_DIR = /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/michael/HRI/ros2_ws/build/tutorial_interfaces
+CMAKE_BINARY_DIR = /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces
 
 # Utility rule file for tutorial_interfaces_uninstall.
 
@@ -67,7 +67,7 @@ include CMakeFiles/tutorial_interfaces_uninstall.dir/compiler_depend.make
 include CMakeFiles/tutorial_interfaces_uninstall.dir/progress.make
 
 CMakeFiles/tutorial_interfaces_uninstall:
-	/usr/bin/cmake -P /home/michael/HRI/ros2_ws/build/tutorial_interfaces/ament_cmake_uninstall_target/ament_cmake_uninstall_target.cmake
+	/usr/bin/cmake -P /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/ament_cmake_uninstall_target/ament_cmake_uninstall_target.cmake
 
 tutorial_interfaces_uninstall: CMakeFiles/tutorial_interfaces_uninstall
 tutorial_interfaces_uninstall: CMakeFiles/tutorial_interfaces_uninstall.dir/build.make
@@ -82,6 +82,6 @@ CMakeFiles/tutorial_interfaces_uninstall.dir/clean:
 .PHONY : CMakeFiles/tutorial_interfaces_uninstall.dir/clean
 
 CMakeFiles/tutorial_interfaces_uninstall.dir/depend:
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/michael/HRI/ros2_ws/src/tutorial_interfaces /home/michael/HRI/ros2_ws/src/tutorial_interfaces /home/michael/HRI/ros2_ws/build/tutorial_interfaces /home/michael/HRI/ros2_ws/build/tutorial_interfaces /home/michael/HRI/ros2_ws/build/tutorial_interfaces/CMakeFiles/tutorial_interfaces_uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/CMakeFiles/tutorial_interfaces_uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/tutorial_interfaces_uninstall.dir/depend
 

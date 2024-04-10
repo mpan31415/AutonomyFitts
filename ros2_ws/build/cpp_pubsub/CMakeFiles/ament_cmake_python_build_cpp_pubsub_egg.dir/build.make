@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/michael/HRI/ros2_ws/src/cpp_pubsub
+CMAKE_SOURCE_DIR = /home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/michael/HRI/ros2_ws/build/cpp_pubsub
+CMAKE_BINARY_DIR = /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub
 
 # Utility rule file for ament_cmake_python_build_cpp_pubsub_egg.
 
@@ -67,7 +67,7 @@ include CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/compiler_depend.m
 include CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/progress.make
 
 CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg:
-	cd /home/michael/HRI/ros2_ws/build/cpp_pubsub/ament_cmake_python/cpp_pubsub && /usr/bin/python3.10 setup.py egg_info
+	cd /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub/ament_cmake_python/cpp_pubsub && /usr/bin/python3.10 setup.py egg_info
 
 ament_cmake_python_build_cpp_pubsub_egg: CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg
 ament_cmake_python_build_cpp_pubsub_egg: CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/build.make
@@ -82,6 +82,6 @@ CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/clean:
 .PHONY : CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/clean
 
 CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/depend:
-	cd /home/michael/HRI/ros2_ws/build/cpp_pubsub && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/michael/HRI/ros2_ws/src/cpp_pubsub /home/michael/HRI/ros2_ws/src/cpp_pubsub /home/michael/HRI/ros2_ws/build/cpp_pubsub /home/michael/HRI/ros2_ws/build/cpp_pubsub /home/michael/HRI/ros2_ws/build/cpp_pubsub/CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub /home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub/CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/depend
 

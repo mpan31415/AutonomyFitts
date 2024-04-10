@@ -1,8 +1,8 @@
 {
   "package_name": "tutorial_interfaces",
   "non_idl_tuples": [
-    "/home/michael/HRI/ros2_ws/src/tutorial_interfaces:msg/Falconpos.msg",
-    "/home/michael/HRI/ros2_ws/src/tutorial_interfaces:msg/PosInfo.msg",
-    "/home/michael/HRI/ros2_ws/src/tutorial_interfaces:srv/AddThreeInts.srv"
+    "/home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces:msg/Falconpos.msg",
+    "/home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces:msg/PosInfo.msg",
+    "/home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces:srv/AddThreeInts.srv"
   ]
 }

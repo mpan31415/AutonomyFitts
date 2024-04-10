@@ -191,7 +191,7 @@ void generate_fitts_ring(visualization_msgs::msg::Marker &spheres, int num_targe
                          double ring_radius, double target_width, int target_id)
 {
   // make sure the marker is cleared
-  spheres.clear();
+  // spheres.clear();
 
   // fill-in the spheres marker message
   spheres.header.frame_id = "/panda_link0";

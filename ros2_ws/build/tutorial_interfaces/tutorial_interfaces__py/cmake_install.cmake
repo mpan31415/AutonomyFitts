@@ -1,8 +1,8 @@
-# Install script for directory: /home/michael/HRI/ros2_ws/build/tutorial_interfaces/tutorial_interfaces__py
+# Install script for directory: /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/tutorial_interfaces__py
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/michael/HRI/ros2_ws/install/tutorial_interfaces")
+  set(CMAKE_INSTALL_PREFIX "/home/michael/AutonomyFitts/ros2_ws/install/tutorial_interfaces")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

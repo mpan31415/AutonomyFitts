@@ -25,6 +25,9 @@ _colcon_prefix_chain_bash_source_script "$COLCON_CURRENT_PREFIX/local_setup.bash
 COLCON_CURRENT_PREFIX="/home/michael/Azure_Kinect_ROS_Driver/install"
 _colcon_prefix_chain_bash_source_script "$COLCON_CURRENT_PREFIX/local_setup.bash"
 # setting COLCON_CURRENT_PREFIX avoids determining the prefix in the sourced script
+COLCON_CURRENT_PREFIX="/home/michael/HRI/ros2_ws/install"
+_colcon_prefix_chain_bash_source_script "$COLCON_CURRENT_PREFIX/local_setup.bash"
+# setting COLCON_CURRENT_PREFIX avoids determining the prefix in the sourced script
 COLCON_CURRENT_PREFIX="/home/michael/project/franka_ws/install"
 _colcon_prefix_chain_bash_source_script "$COLCON_CURRENT_PREFIX/local_setup.bash"
 

@@ -1,11 +1,11 @@
 {
   "package_name": "tutorial_interfaces",
-  "output_dir": "/home/michael/HRI/ros2_ws/build/tutorial_interfaces/rosidl_typesupport_introspection_c/tutorial_interfaces",
+  "output_dir": "/home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/rosidl_typesupport_introspection_c/tutorial_interfaces",
   "template_dir": "/opt/ros/humble/share/rosidl_typesupport_introspection_c/resource",
   "idl_tuples": [
-    "/home/michael/HRI/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces:msg/Falconpos.idl",
-    "/home/michael/HRI/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces:msg/PosInfo.idl",
-    "/home/michael/HRI/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces:srv/AddThreeInts.idl"
+    "/home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces:msg/Falconpos.idl",
+    "/home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces:msg/PosInfo.idl",
+    "/home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces:srv/AddThreeInts.idl"
   ],
   "ros_interface_dependencies": [
     "geometry_msgs:/opt/ros/humble/share/geometry_msgs/msg/Accel.idl",
@@ -77,9 +77,9 @@
     "/opt/ros/humble/share/rosidl_typesupport_introspection_c/resource/msg__type_support.c.em",
     "/opt/ros/humble/share/rosidl_typesupport_introspection_c/resource/srv__rosidl_typesupport_introspection_c.h.em",
     "/opt/ros/humble/share/rosidl_typesupport_introspection_c/resource/srv__type_support.c.em",
-    "/home/michael/HRI/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces/msg/Falconpos.idl",
-    "/home/michael/HRI/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces/msg/PosInfo.idl",
-    "/home/michael/HRI/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces/srv/AddThreeInts.idl",
+    "/home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces/msg/Falconpos.idl",
+    "/home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces/msg/PosInfo.idl",
+    "/home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/rosidl_adapter/tutorial_interfaces/srv/AddThreeInts.idl",
     "/opt/ros/humble/share/geometry_msgs/msg/Accel.idl",
     "/opt/ros/humble/share/geometry_msgs/msg/AccelStamped.idl",
     "/opt/ros/humble/share/geometry_msgs/msg/AccelWithCovariance.idl",

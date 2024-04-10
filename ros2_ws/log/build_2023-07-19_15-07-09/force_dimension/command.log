@@ -1,2 +1,0 @@
-Invoking command in '/home/michael/HRI/ros2_ws/build/force_dimension': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/michael/HRI/ros2_ws/src/ros_force_dimension -DCMAKE_INSTALL_PREFIX=/home/michael/HRI/ros2_ws/install/force_dimension
-Invoked command in '/home/michael/HRI/ros2_ws/build/force_dimension' returned '1': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/michael/HRI/ros2_ws/src/ros_force_dimension -DCMAKE_INSTALL_PREFIX=/home/michael/HRI/ros2_ws/install/force_dimension

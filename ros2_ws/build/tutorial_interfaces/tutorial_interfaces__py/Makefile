@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/michael/HRI/ros2_ws/src/tutorial_interfaces
+CMAKE_SOURCE_DIR = /home/michael/AutonomyFitts/ros2_ws/src/tutorial_interfaces
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/michael/HRI/ros2_ws/build/tutorial_interfaces
+CMAKE_BINARY_DIR = /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -142,14 +142,14 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -E cmake_progress_start /home/michael/HRI/ros2_ws/build/tutorial_interfaces/CMakeFiles /home/michael/HRI/ros2_ws/build/tutorial_interfaces/tutorial_interfaces__py//CMakeFiles/progress.marks
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/HRI/ros2_ws/build/tutorial_interfaces/CMakeFiles 0
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -E cmake_progress_start /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/CMakeFiles /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/tutorial_interfaces__py//CMakeFiles/progress.marks
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/clean
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/clean
 .PHONY : clean
 
 # The main clean target
@@ -158,22 +158,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/preinstall
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/preinstall
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 tutorial_interfaces__py/CMakeFiles/tutorial_interfaces__py.dir/rule:
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/CMakeFiles/tutorial_interfaces__py.dir/rule
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tutorial_interfaces__py/CMakeFiles/tutorial_interfaces__py.dir/rule
 .PHONY : tutorial_interfaces__py/CMakeFiles/tutorial_interfaces__py.dir/rule
 
 # Convenience name for target.
@@ -182,7 +182,7 @@ tutorial_interfaces__py: tutorial_interfaces__py/CMakeFiles/tutorial_interfaces_
 
 # fast build rule for target.
 tutorial_interfaces__py/fast:
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f tutorial_interfaces__py/CMakeFiles/tutorial_interfaces__py.dir/build.make tutorial_interfaces__py/CMakeFiles/tutorial_interfaces__py.dir/build
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(MAKE) $(MAKESILENT) -f tutorial_interfaces__py/CMakeFiles/tutorial_interfaces__py.dir/build.make tutorial_interfaces__py/CMakeFiles/tutorial_interfaces__py.dir/build
 .PHONY : tutorial_interfaces__py/fast
 
 # Help Target
@@ -210,6 +210,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/michael/HRI/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/michael/AutonomyFitts/ros2_ws/build/tutorial_interfaces && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
