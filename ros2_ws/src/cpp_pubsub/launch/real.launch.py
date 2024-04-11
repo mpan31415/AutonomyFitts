@@ -170,10 +170,10 @@ def generate_launch_description():
             name='marker_publisher'
         ),
 
-        # trajectory recorder node
+        # Fitts task node
         Node(
             package='cpp_pubsub',
-            executable='traj_recorder.py',
+            executable='fitts_task.py',
             parameters=[
                 {free_drive_parameter_name: free_drive},
                 {mapping_ratio_parameter_name: mapping_ratio},
@@ -184,6 +184,21 @@ def generate_launch_description():
             output='screen',
             emulate_tty=True
         ),
+
+        # # trajectory recorder node
+        # Node(
+        #     package='cpp_pubsub',
+        #     executable='traj_recorder.py',
+        #     parameters=[
+        #         {free_drive_parameter_name: free_drive},
+        #         {mapping_ratio_parameter_name: mapping_ratio},
+        #         {participant_parameter_name: participant},
+        #         {alpha_parameter_name: alpha},
+        #         {ring_parameter_name: ring}
+        #     ],
+        #     output='screen',
+        #     emulate_tty=True
+        # ),
 
         # publish {camera base frame, depth camera frame}
         Node(

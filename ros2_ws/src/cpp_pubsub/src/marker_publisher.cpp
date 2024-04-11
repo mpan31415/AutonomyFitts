@@ -6,6 +6,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64.hpp"
+#include "std_msgs/msg/int16.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
@@ -21,7 +22,9 @@ void generate_fitts_ring(visualization_msgs::msg::Marker &spheres,
                          double ring_center_x, double ring_center_y, double ring_center_z,
                          int num_targets, double ring_radius, double target_width, int target_id);
 
+void generate_tcp_arrow(visualization_msgs::msg::Marker &arrow);
 void generate_tcp_marker(visualization_msgs::msg::Marker &tcp_marker);
+
 
 
 class MarkerPublisher : public rclcpp::Node
@@ -45,7 +48,7 @@ class MarkerPublisher : public rclcpp::Node
     double r_big = 0.14;
     double w_small = 0.02;
     double w_big = 0.04;
-    int curr_target_id = 1;   // in the range [1, 9]
+    int curr_target_id = 0;   // in the range [0, 8]
 
     // Active Fitts ring parameters (dynamic)
     // int ring_id = 1;
@@ -66,6 +69,10 @@ class MarkerPublisher : public rclcpp::Node
       // create the marker publisher
       marker_timer_ = this->create_wall_timer(20ms, std::bind(&MarkerPublisher::marker_callback, this));  // publish this at 50 Hz
       marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("visualization_marker_array", 10);
+
+      // create the curr_target_id subscriber
+      curr_target_id_sub_ = this->create_subscription<std_msgs::msg::Int16>(
+      "curr_target_id", 10, std::bind(&MarkerPublisher::curr_target_id_callback, this, std::placeholders::_1));
     }
 
 
@@ -76,7 +83,8 @@ class MarkerPublisher : public rclcpp::Node
       auto marker_array_msg = visualization_msgs::msg::MarkerArray();
 
       // tcp position projection onto the Fitts plane
-      generate_tcp_marker(tcp_marker_);
+      // generate_tcp_marker(tcp_marker_);
+      generate_tcp_arrow(tcp_marker_);
       marker_array_msg.markers.push_back(tcp_marker_);
 
       switch (ring_id) {
@@ -88,13 +96,21 @@ class MarkerPublisher : public rclcpp::Node
 
       // Fitts ring
       generate_fitts_ring(fitts_marker_, fitts_ring_origin.at(0), fitts_ring_origin.at(1), fitts_ring_origin.at(2), 
-                          n_targets, r_radius, w_target, curr_target_id-1);
+                          n_targets, r_radius, w_target, curr_target_id);
       marker_array_msg.markers.push_back(fitts_marker_);
       
       // update markers in Rviz
       marker_pub_->publish(marker_array_msg);
     }
 
+    /////////////// CALLBACK LISTENING TO THE CURRENT TARGET ID ///////////////
+    void curr_target_id_callback(const std_msgs::msg::Int16 & msg)
+    { 
+      curr_target_id = msg.data;
+      std::cout << "\n\nReceived a new incoming target ID = " << curr_target_id << " !!!\n\n" << std::endl;
+    }
+
+    /////////////// FUNCTION TO PRINT THE PARAMETERS ///////////////
     void print_params() {
       for (unsigned int i=0; i<10; i++) std::cout << "\n";
       std::cout << "\n\nThe current parameters [marker_publisher] are as follows:\n" << std::endl;
@@ -104,6 +120,8 @@ class MarkerPublisher : public rclcpp::Node
 
     rclcpp::TimerBase::SharedPtr marker_timer_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
+
+    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr curr_target_id_sub_;
 
     visualization_msgs::msg::Marker fitts_marker_;
     visualization_msgs::msg::Marker tcp_marker_;
@@ -171,6 +189,41 @@ void generate_fitts_ring(visualization_msgs::msg::Marker &spheres,
     spheres.points.push_back(p);
     spheres.colors.push_back(color);
   }
+}
+
+
+/////////////////////////////////// FUNCTIONS TO GENERATE TCP ARROW ///////////////////////////////////
+void generate_tcp_arrow(visualization_msgs::msg::Marker &arrow)
+{
+  arrow.header.frame_id = "/panda_hand_tcp";
+  // arrow.header.frame_id = "panda_hand";
+  arrow.header.stamp = rclcpp::Clock().now();
+  arrow.ns = "marker_publisher";
+  arrow.action = visualization_msgs::msg::Marker::ADD;
+  arrow.id = 1;
+  arrow.type = visualization_msgs::msg::Marker::ARROW;
+
+  // Arrow position
+  arrow.pose.position.x = 0.0;
+  arrow.pose.position.y = 0.0;
+  arrow.pose.position.z = 0.0;
+
+  // Arrow orientation
+  arrow.pose.orientation.x = 0.0;
+  arrow.pose.orientation.y = 0.0;
+  arrow.pose.orientation.z = 0.0;
+  arrow.pose.orientation.w = 1.0;
+
+  // Arrow dimensions
+  arrow.scale.x = 0.04; // Shaft diameter
+  arrow.scale.y = 0.06; // Head diameter
+  arrow.scale.z = 0.04; // Head length
+
+  // Color
+  arrow.color.r = 0.0;
+  arrow.color.g = 0.0;
+  arrow.color.b = 1.0;
+  arrow.color.a = 1.0;
 }
 
 

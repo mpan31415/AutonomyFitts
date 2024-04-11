@@ -71,7 +71,7 @@ class TrajRecorder(Node):
         self.refx, self.refy, self.refz = get_sine_ref_points(200, self.traj_params['a'], self.traj_params['b'], self.traj_params['c'], 
                                                               self.traj_params['s'], self.traj_params['h'], TRAJ_HEIGHT, TRAJ_WIDTH, TRAJ_DEPTH, 
                                                               ORIGIN, self.use_depth)
-
+        
         # tcp position subscriber
         self.tcp_pos_sub = self.create_subscription(PosInfo, 'tcp_position', self.tcp_pos_callback, 10)
         self.tcp_pos_sub  # prevent unused variable warning

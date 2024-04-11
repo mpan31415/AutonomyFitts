@@ -167,7 +167,10 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cpp_pubsub" TYPE PROGRAM FILES "/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/scripts/traj_recorder.py")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cpp_pubsub" TYPE PROGRAM FILES
+    "/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/scripts/traj_recorder.py"
+    "/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/scripts/fitts_task.py"
+    )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
