@@ -36,7 +36,7 @@ using namespace std::chrono_literals;
 
 
 /////////////////// global variables ///////////////////
-const std::string urdf_path = "/home/michael/HRI/ros2_ws/src/cpp_pubsub/urdf/panda.urdf";
+const std::string urdf_path = "/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/urdf/panda.urdf";
 const unsigned int n_joints = 7;
 
 const std::vector<double> lower_joint_limits {-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973};

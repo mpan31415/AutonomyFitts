@@ -18,7 +18,7 @@ from time import time
 
 ORIGIN = [0.5059, 0.0, 0.4346]   # this is in [meters]
 
-ALL_CSV_DIR = "/home/michael/HRI/ros2_ws/src/cpp_pubsub/data_logging/csv_logs/"
+ALL_CSV_DIR = "/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/data_logging/csv_logs/"
 
 LOG_DATA = True
 
@@ -46,7 +46,7 @@ class TrajRecorder(Node):
         super().__init__('traj_recorder')
 
         # parameter stuff
-        self.param_names = ['free_drive', 'mapping_ratio', 'use_depth', 'part_id', 'alpha_id', 'traj_id']
+        self.param_names = ['free_drive', 'mapping_ratio', 'part_id', 'alpha_id', 'ring_id']
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -54,22 +54,20 @@ class TrajRecorder(Node):
                 (self.param_names[1], 3.0),
                 (self.param_names[2], 0),
                 (self.param_names[3], 0),
-                (self.param_names[4], 0),
-                (self.param_names[5], 0)
+                (self.param_names[4], 0)
             ]
         )
-        (free_drive_param, mapping_ratio_param, use_depth_param, part_param, alpha_param, traj_param) = self.get_parameters(self.param_names)
+        (free_drive_param, mapping_ratio_param, part_param, alpha_param, traj_param) = self.get_parameters(self.param_names)
         self.free_drive = free_drive_param.value
         self.mapping_ratio = mapping_ratio_param.value
-        self.use_depth = use_depth_param.value
         self.part_id = part_param.value
         self.alpha_id = alpha_param.value
-        self.traj_id = traj_param.value
+        self.ring_id = traj_param.value
 
         self.print_params()
 
         # get the reference trajectory points
-        self.traj_params = TRAJ_DICT_LIST[self.traj_id]
+        self.traj_params = TRAJ_DICT_LIST[self.ring_id]
         self.refx, self.refy, self.refz = get_sine_ref_points(200, self.traj_params['a'], self.traj_params['b'], self.traj_params['c'], 
                                                               self.traj_params['s'], self.traj_params['h'], TRAJ_HEIGHT, TRAJ_WIDTH, TRAJ_DEPTH, 
                                                               ORIGIN, self.use_depth)
@@ -175,7 +173,7 @@ class TrajRecorder(Node):
     ##############################################################################
     def write_to_csv(self):
 
-        dl = DataLogger(self.csv_dir, self.part_id, self.alpha_id, self.traj_id, self.refxs, self.refys, self.refzs, self.hxs, self.hys, self.hzs,
+        dl = DataLogger(self.csv_dir, self.part_id, self.alpha_id, self.ring_id, self.refxs, self.refys, self.refzs, self.hxs, self.hys, self.hzs,
                         self.rxs, self.rys, self.rzs, self.txs, self.tys, self.tzs, self.times_from_start, self.times, self.datetimes)
 
         dl.calc_error(self.use_depth)
@@ -193,10 +191,9 @@ class TrajRecorder(Node):
         print("\n\nThe current parameters [traj_recorder] are as follows:\n")
         print("The free_drive flag = %d\n\n" % self.free_drive)
         print("The mapping_ratio = %d\n\n" % self.mapping_ratio)
-        print("The use_depth = %d\n\n" % self.use_depth)
         print("The participant_id = %d\n\n" % self.part_id)
         print("The alpha_id = %d\n\n" % self.alpha_id)
-        print("The trajectory_id = %d\n\n" % self.traj_id)
+        print("The ring_id = %d\n\n" % self.ring_id)
 
         print("=" * 100)
         print("\n" * 10)

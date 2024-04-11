@@ -22,12 +22,8 @@ class PositionTalker : public rclcpp::Node
 public:
 
   // parameters name list
-  std::vector<std::string> param_names = {"mapping_ratio", "use_depth", "part_id", "alpha_id", "traj_id"};
+  std::vector<std::string> param_names = {"mapping_ratio"};
   double mapping_ratio {3.0};
-  int use_depth {0};
-  int part_id {0};
-  int alpha_id {0};
-  int traj_id {0};
 
   // other arrays
   double p[3] {0.0, 0.0, 0.0};
@@ -41,7 +37,6 @@ public:
 
   ///////// -> this is the centering / starting Falcon pos, but is NOT THE ORIGIN => ORIGIN IS ALWAYS (0, 0, 0)
   ///////// -> max bounds are around +-0.05m (5cm)
-  ///////// -> this depends on the alpha_id parameter
   std::vector<double> centering {0.00, 0.00, 0.00};   ///////// -> note: this is in [meters]
   // guide:
   // {x, y, z} = {1, 2, 3} DOFS = {in/out, left/right, up/down}
@@ -60,17 +55,9 @@ public:
 
     // parameter stuff
     this->declare_parameter(param_names.at(0), 3.0);
-    this->declare_parameter(param_names.at(1), 0);
-    this->declare_parameter(param_names.at(2), 0);
-    this->declare_parameter(param_names.at(3), 0);
-    this->declare_parameter(param_names.at(4), 0);
     
     std::vector<rclcpp::Parameter> params = this->get_parameters(param_names);
     mapping_ratio = std::stod(params.at(0).value_to_string().c_str());
-    use_depth = std::stoi(params.at(1).value_to_string().c_str());
-    part_id = std::stoi(params.at(2).value_to_string().c_str());
-    alpha_id = std::stoi(params.at(3).value_to_string().c_str());
-    traj_id = std::stoi(params.at(4).value_to_string().c_str());
     print_params();
 
     // update first point if not using depth
@@ -161,10 +148,6 @@ private:
     for (unsigned int i=0; i<10; i++) std::cout << "\n";
     std::cout << "\n\nThe current parameters [position_publisher] are as follows:\n" << std::endl;
     std::cout << "Mapping ratio = " << mapping_ratio << "\n" << std::endl;
-    std::cout << "Use depth parameter = " << use_depth << "\n" << std::endl;
-    std::cout << "Participant ID = " << part_id << "\n" << std::endl;
-    std::cout << "Alpha ID = " << alpha_id << "\n" << std::endl;
-    std::cout << "Trajectory ID = " << traj_id << "\n" << std::endl;
     for (unsigned int i=0; i<10; i++) std::cout << "\n";
   }
 
