@@ -65,7 +65,6 @@ CMAKE_BINARY_DIR = /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub
 # The main recursive "all" target.
 all: CMakeFiles/position_talker.dir/all
 all: CMakeFiles/gazebo_controller.dir/all
-all: CMakeFiles/real_controller.dir/all
 all: CMakeFiles/const_br.dir/all
 all: CMakeFiles/marker_publisher.dir/all
 all: CMakeFiles/ament_cmake_python_build_cpp_pubsub_egg.dir/all
@@ -80,7 +79,6 @@ clean: CMakeFiles/uninstall.dir/clean
 clean: CMakeFiles/cpp_pubsub_uninstall.dir/clean
 clean: CMakeFiles/position_talker.dir/clean
 clean: CMakeFiles/gazebo_controller.dir/clean
-clean: CMakeFiles/real_controller.dir/clean
 clean: CMakeFiles/const_br.dir/clean
 clean: CMakeFiles/marker_publisher.dir/clean
 clean: CMakeFiles/ament_cmake_python_copy_cpp_pubsub.dir/clean
@@ -190,32 +188,6 @@ gazebo_controller: CMakeFiles/gazebo_controller.dir/rule
 CMakeFiles/gazebo_controller.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gazebo_controller.dir/build.make CMakeFiles/gazebo_controller.dir/clean
 .PHONY : CMakeFiles/gazebo_controller.dir/clean
-
-#=============================================================================
-# Target rules for target CMakeFiles/real_controller.dir
-
-# All Build rule for target.
-CMakeFiles/real_controller.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/real_controller.dir/build.make CMakeFiles/real_controller.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/real_controller.dir/build.make CMakeFiles/real_controller.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub/CMakeFiles --progress-num=9,10 "Built target real_controller"
-.PHONY : CMakeFiles/real_controller.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/real_controller.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/real_controller.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/AutonomyFitts/ros2_ws/build/cpp_pubsub/CMakeFiles 0
-.PHONY : CMakeFiles/real_controller.dir/rule
-
-# Convenience name for target.
-real_controller: CMakeFiles/real_controller.dir/rule
-.PHONY : real_controller
-
-# clean rule for target.
-CMakeFiles/real_controller.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/real_controller.dir/build.make CMakeFiles/real_controller.dir/clean
-.PHONY : CMakeFiles/real_controller.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/const_br.dir

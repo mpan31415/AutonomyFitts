@@ -36,13 +36,12 @@ class MarkerPublisher : public rclcpp::Node
     int ring_id {0};
     
     //////// KEEP CONSISTENT WITH REAL CONTROLLER ////////
-    //// NOTE: This is origin of the robot, not the fitts ring (there is difference in depth)
-    std::vector<double> origin {0.5059, 0.0, 0.4};
+    std::vector<double> origin {0.5059, 0.0, 0.4346};
 
     const int pub_freq = 50;   // [Hz]
 
     // Fitts ring parameters (fixed)
-    std::vector<double> fitts_ring_origin {0.5059, 0.0, 0.4};
+    std::vector<double> fitts_ring_origin {0.5059, 0.0, 0.4346};
     int n_targets = 9;
     double r_small = 0.1;
     double r_big = 0.14;
@@ -50,7 +49,7 @@ class MarkerPublisher : public rclcpp::Node
     double w_big = 0.04;
     int curr_target_id = 0;   // in the range [0, 8]
 
-    // Active Fitts ring parameters (dynamic)
+    // Active Fitts ring parameters (for the current trial)
     // int ring_id = 1;
     double r_radius = 0.0;
     double w_target = 0.0;

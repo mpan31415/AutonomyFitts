@@ -71,6 +71,9 @@ class FittsTask(Node):
         # current_target_id publisher
         self.curr_target_pub = self.create_publisher(Int16, 'curr_target_id', 1)
 
+        # ring_finished flag publisher
+        self.ring_finished_pub = self.create_publisher(Bool, 'ring_finished', 1)
+
         # tcp position subscriber
         self.tcp_pos_sub = self.create_subscription(PosInfo, 'tcp_position', self.tcp_pos_callback, 10)
         self.tcp_pos_sub  # prevent unused variable warning
@@ -98,6 +101,14 @@ class FittsTask(Node):
         msg.data = target_id
         self.curr_target_pub.publish(msg)
         print("Published current target = %d" % target_id)
+
+
+    ##############################################################################
+    def publish_ring_finished(self):
+        msg = Bool()
+        msg.data = True
+        self.ring_finished_pub.publish(msg)
+        print("Published ring_finished flag = True!\n")
 
 
     ##############################################################################
@@ -138,12 +149,15 @@ class FittsTask(Node):
             # target not selected yet
             if not self.target_is_selected():
                 print("Target %d is not selected yet!" % self.curr_target_id)
+                self.publish_target_id(self.curr_target_id)
             # target selected
             else:
                 # advance to next target only if not yet finished whole ring
-                if self.curr_order_list_id == TARGET_ORDER_LIST[-1]:
-                    self.finished_ring = True
+                if self.curr_order_list_id == N_TARGETS-1:
+                    self.finished_ring = True   ## finished entire ring, do not advance to next target
+                    self.publish_ring_finished()
                 else:
+                    # advanced to next target
                     self.curr_order_list_id += 1
                     self.curr_target_id = TARGET_ORDER_LIST[self.curr_order_list_id]
                     print("Target selected, setting next target = %d" % self.curr_target_id)

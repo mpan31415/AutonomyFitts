@@ -53,8 +53,8 @@ target_link_libraries(position_talker /usr/local/lib/libdhd.so.3
 add_executable(gazebo_controller src/gazebo_controller.cpp)
 ament_target_dependencies(gazebo_controller rclcpp tutorial_interfaces std_msgs trajectory_msgs sensor_msgs kdl_parser)
 
-add_executable(real_controller src/real_controller.cpp)
-ament_target_dependencies(real_controller rclcpp tutorial_interfaces std_msgs trajectory_msgs sensor_msgs kdl_parser)
+# add_executable(real_controller src/real_controller.cpp)
+# ament_target_dependencies(real_controller rclcpp tutorial_interfaces std_msgs trajectory_msgs sensor_msgs kdl_parser)
 
 add_executable(const_br src/const_br.cpp)
 ament_target_dependencies(const_br geometry_msgs rclcpp tf2 tf2_ros angles)
@@ -68,7 +68,7 @@ install(TARGETS
   gazebo_controller
 
   position_talker
-  real_controller
+  # real_controller
   const_br
   marker_publisher
   

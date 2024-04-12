@@ -1,6 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float64.hpp"
+#include "std_msgs/msg/int16.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
@@ -42,7 +43,7 @@ const unsigned int n_joints = 7;
 const std::vector<double> lower_joint_limits {-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973};
 const std::vector<double> upper_joint_limits {2.8973, 1.7628, 2.8973, -0.0698, 2.8973, 3.7525, 2.8973};
 
-const bool display_time = false;
+const bool disp_ik_solve_time = false;
 
 KDL::Tree panda_tree;
 KDL::Chain panda_chain;
@@ -50,7 +51,7 @@ KDL::Chain panda_chain;
 KDL::Rotation orientation;
 bool got_orientation = false;
 
-std::vector<double> tcp_pos {0.5059, 0.0, 0.4346};   // initialized the same as the "home" position
+std::vector<double> tcp_pos {0.5059, 0.0, 0.4346};   // initialized the a self-defined "home" position
 
 //////// global dictionaries ////////
 std::vector< std::vector<double> > alphas_dict {
@@ -66,16 +67,9 @@ std::vector< std::vector<double> > alphas_dict {
 /////////////////// function declarations ///////////////////
 void compute_ik(std::vector<double>& desired_tcp_pos, std::vector<double>& curr_vals, std::vector<double>& res_vals);
 
-void readCSV(const std::string& filename, std::vector<double>& dataArray);
-double linearInterpolate(double y1, double y2, double mu);
-double cosineInterpolate(double y1, double y2, double mu);
-std::vector<double> linear_interpolate_vec(std::vector<double> old_vec, int num_interp);
-std::vector<double> cosine_interpolate_vec(std::vector<double> old_vec, int num_interp);
-
 bool within_limits(std::vector<double>& vals);
 bool create_tree();
 void get_chain();
-double get_min(double a, double b);
 
 void print_joint_vals(std::vector<double>& joint_vals);
 
@@ -87,41 +81,61 @@ class RealController : public rclcpp::Node
 public:
 
   // parameters name list
-  std::vector<std::string> param_names = {"free_drive", "mapping_ratio", "use_depth", "part_id", "alpha_id", "traj_id"};
+  std::vector<std::string> param_names = {"free_drive", "mapping_ratio", "use_depth", "part_id", "alpha_id", "ring_id"};
   int free_drive {0};
   double mapping_ratio {3.0};
-  int use_depth {0};
   int part_id {0};
   int alpha_id {0};
-  int traj_id {0};
+  int ring_id {0};
   
   std::vector<double> origin {0.5059, 0.0, 0.4346}; //////// can change the task-space origin point! ////////
 
   std::vector<double> human_offset {0.0, 0.0, 0.0};
-  std::vector<double> ref_offset {0.0, 0.0, 0.0};
   std::vector<double> robot_offset {0.0, 0.0, 0.0};
 
   std::vector<double> curr_joint_vals {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   std::vector<double> ik_joint_vals {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   std::vector<double> message_joint_vals {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+  std::vector<double> initial_joint_vals {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::vector<double> final_joint_vals {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::vector<double> home_joint_vals {0, -M_PI_4/2, 0, -5 * M_PI_4/2, 0, M_PI_2, M_PI_4};
+
   bool control = false;
   
   const int control_freq = 500;   // the rate at which the "controller_publisher" function is called in [Hz]
   const int tcp_pub_frequency = 40;   // in [Hz]
 
-  // step 1: prep-time
-  const int prep_time = 5;    // seconds
-  const int max_prep_count = prep_time * control_freq;
+  // step 1: prep-time (listens to joint values)
+  // step 2: smoothing -> used to initially smoothly incorporate the Falcon offset (and then float for a while before starting)
+  // step 3: complete the ring (however long it takes)
+  // step 4: shift control back to robot
+  // step 5: move the robot back to self-defined home position
+
+  // times for each step
+  const int prep_time = 5;
+  const int require_initial_vals_time = 3;
+  const int smoothing_time = 5;
+  const int float_time = 2;     // time to float at starting position
+  const int shifting_time = 3;
+  const int homing_time = 2;
+  const int shutdown_time = 1;
+
+  // calculations of the required counts (based on control frequency)
+  const int max_prep_count = control_freq * prep_time;
   int prep_count = 0;
 
-  std::vector<double> initial_joint_vals {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  const int required_initial_vals = control_freq * 3;   // get initial joint values for 3 seconds
+  const int required_initial_vals = control_freq * require_initial_vals_time;   // get initial joint values for X seconds
   int initial_joint_vals_count = 0;
 
-  // step 2: smoothing -> used to initially smoothly incorporate the Falcon offset
-  const int smoothing_time = 5;   /// smoothing time in [seconds]
   const int max_smoothing_count = control_freq * smoothing_time;
-  const int float_time = 2;     // time to float at starting position [seconds]
+
+  int max_shifting_count = shifting_time * control_freq;
+
+  int max_homing_count = homing_time * control_freq;
+
+  int max_shutdown_count = shutdown_time * control_freq;
+
 
   // IMPORTANT: BIG BOSS COUNTER HERE
   int count = 0;
@@ -136,46 +150,20 @@ public:
   double iay = 0.0;
   double iaz = 0.0;
 
-  // trajectory recording
-  const int traj_duration = 10;   // in [seconds]
-  int max_recording_count = control_freq * traj_duration;
-  bool record_flag = false;
 
-  // for robot trajectory following
-  double t_param = 0.0;
+  // Fitts ring parameters (fixed)
+  std::vector<double> fitts_ring_origin {0.5059, 0.0, 0.4};
+  int n_targets = 9;
+  double r_small = 0.1;
+  double r_big = 0.14;
+  double w_small = 0.02;
+  double w_big = 0.04;
+  int curr_target_id = 0;   // in the range [0, 8]
 
-  // sine curve parameters (initialization)
-  int pa = 0;
-  int pb = 0;
-  int pc = 0;
-  double ps = 0.0;
-  double ph = 0.0;
-
-  double depth = 0.1;
-  double width = 0.3;
-  double height = 0.1;
-
-  // for gradually shifting control to robot after 10 second trajectory
-  const int shifting_time = 3;   // seconds
-  int max_shifting_count = shifting_time * control_freq;
-
-  // for moving to home after trajectory finishes
-  std::vector<double> final_joint_vals {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
-  // home joint values
-  std::vector<double> home_joint_vals {0, -M_PI_4/2, 0, -5 * M_PI_4/2, 0, M_PI_2, M_PI_4};
-
-  // for gradually homing the robot after the 3-second shifting
-  const int homing_time = 2;    // seconds
-  int max_homing_count = homing_time * control_freq;
-
-  // wait 1 second before shutting down node
-  const int shutdown_time = 1;    // second
-  int max_shutdown_count = shutdown_time * control_freq;
-
-  // empty noise file index string & noise vector
-  std::string nid {};
-  std::vector<double> robot_noise_vector;
+  // Active Fitts ring parameters (for the current trial)
+  // int ring_id = 1;
+  double r_radius = 0.0;
+  double w_target = 0.0;
 
 
   ////////////////////////////////////////////////////////////////////////
@@ -188,15 +176,13 @@ public:
     this->declare_parameter(param_names.at(2), 0);
     this->declare_parameter(param_names.at(3), 0);
     this->declare_parameter(param_names.at(4), 0);
-    this->declare_parameter(param_names.at(5), 0);
     
     std::vector<rclcpp::Parameter> params = this->get_parameters(param_names);
     free_drive = std::stoi(params.at(0).value_to_string().c_str());
     mapping_ratio = std::stod(params.at(1).value_to_string().c_str());
-    use_depth = std::stod(params.at(2).value_to_string().c_str());
-    part_id = std::stoi(params.at(3).value_to_string().c_str());
-    alpha_id = std::stoi(params.at(4).value_to_string().c_str());
-    traj_id = std::stoi(params.at(5).value_to_string().c_str());
+    part_id = std::stoi(params.at(2).value_to_string().c_str());
+    alpha_id = std::stoi(params.at(3).value_to_string().c_str());
+    ring_id = std::stoi(params.at(4).value_to_string().c_str());
 
     // overwrite alpha_id if the free drive mode is activated
     if (free_drive == 1) alpha_id = 5;
@@ -213,14 +199,12 @@ public:
     iay = ay;
     iaz = az;
 
-    // write the sine curve parameters
-    switch (traj_id) {
-      case 0: pa = 1; pb = 1; pc = 4; ps = M_PI;     ph = 0.25; nid = "8"; break;
-      case 1: pa = 2; pb = 3; pc = 4; ps = 4*M_PI/3; ph = 0.25; nid = "9"; break;
-      case 2: pa = 1; pb = 3; pc = 4; ps = M_PI;     ph = 0.25; nid = "7"; break;
-      case 3: pa = 2; pb = 2; pc = 5; ps = M_PI;     ph = 0.2;  nid = "5"; break;
-      case 4: pa = 2; pb = 3; pc = 5; ps = 8*M_PI/5; ph = 0.2;  nid = "2"; break;
-      case 5: pa = 2; pb = 4; pc = 5; ps = M_PI;     ph = 0.2;  nid = "4"; break;
+    // write the Fitts ring parameters
+    switch (ring_id) {
+      case 1: r_radius = r_small; w_target = w_big;   break;
+      case 2: r_radius = r_big;   w_target = w_big;   break;
+      case 3: r_radius = r_small; w_target = w_small; break;
+      case 4: r_radius = r_big;   w_target = w_small; break;
     }
 
     // joint controller publisher & timer
@@ -230,10 +214,6 @@ public:
     // tcp position publisher & timer
     tcp_pos_pub_ = this->create_publisher<tutorial_interfaces::msg::PosInfo>("tcp_position", 10);
     // tcp_pos_timer_ = this->create_wall_timer(25ms, std::bind(&RealController::tcp_pos_publisher, this));    // publishes at 40 Hz
-
-    // recording flag publisher & timer
-    record_flag_pub_ = this->create_publisher<std_msgs::msg::Bool>("record", 10);
-    record_flag_timer_ = this->create_wall_timer(2ms, std::bind(&RealController::record_flag_publisher, this));    // publishes at 500 Hz
 
     // second_last_point publisher
     last_point_pub_ = this->create_publisher<std_msgs::msg::Bool>("last_point", 10);  // publishes only once
@@ -250,13 +230,14 @@ public:
     falcon_pos_sub_ = this->create_subscription<tutorial_interfaces::msg::Falconpos>(
       "falcon_position", 10, std::bind(&RealController::falcon_pos_callback, this, std::placeholders::_1));
 
+    // create the curr_target_id subscriber
+    curr_target_id_sub_ = this->create_subscription<std_msgs::msg::Int16>(
+    "curr_target_id", 10, std::bind(&MarkerPublisher::curr_target_id_callback, this, std::placeholders::_1));
+
     //Create Panda tree and get its kinematic chain
     if (!create_tree()) rclcpp::shutdown();
     get_chain();
 
-    // read the noise data csv file
-    std::string noise_file {"noise" + nid + ".csv"};
-    generate_noise_vector(noise_file);
   }
 
 private:
@@ -281,7 +262,7 @@ private:
 
     } else {
 
-      // get the robot control offset in Cartesian space (calling the corresponding function of the traj_id)
+      // get the robot control offset in Cartesian space (calling the corresponding function of the ring_id)
       t_param = (double) (count - max_smoothing_count) / max_recording_count * 2 * M_PI;   // t_param is in the range [0, 2pi], but can be out of range
       get_robot_control(t_param);      
 
@@ -381,15 +362,22 @@ private:
     }
   }
 
+  /////////////// CALLBACK LISTENING TO THE CURRENT TARGET ID ///////////////
+  void curr_target_id_callback(const std_msgs::msg::Int16 & msg)
+  { 
+    curr_target_id = msg.data;
+    std::cout << "\n\nReceived a new incoming target ID = " << curr_target_id << " !!!\n\n" << std::endl;
+  }
+
   ///////////////////////////////////// TCP POSITION PUBLISHER /////////////////////////////////////
   void tcp_pos_publisher()
   { 
-    if (count > max_smoothing_count + max_recording_count - tcp_pub_frequency) {
-      auto lp = std_msgs::msg::Bool();
-      lp.data = true;
-      std::cout << "\n\n\n\n\n\n======================= SETTING LAST POINT TO => TRUE =======================\n\n\n\n\n\n" << std::endl;
-      last_point_pub_->publish(lp);
-    }
+    // if (count > max_smoothing_count + max_recording_count - tcp_pub_frequency) {
+    //   auto lp = std_msgs::msg::Bool();
+    //   lp.data = true;
+    //   std::cout << "\n\n\n\n\n\n======================= SETTING LAST POINT TO => TRUE =======================\n\n\n\n\n\n" << std::endl;
+    //   last_point_pub_->publish(lp);
+    // }
 
     // note: this is in meters
     auto message = tutorial_interfaces::msg::PosInfo();
@@ -422,14 +410,6 @@ private:
 
     tcp_pos_pub_->publish(message);
     
-  }
-
-  ///////////////////////////////////// TRAJ RECORD FLAG PUBLISHER /////////////////////////////////////
-  void record_flag_publisher()
-  { 
-    auto message = std_msgs::msg::Bool();
-    message.data = record_flag;
-    record_flag_pub_->publish(message);
   }
 
   ///////////////////////////////////// JOINT STATES SUBSCRIBER /////////////////////////////////////
@@ -484,31 +464,6 @@ private:
     // robot_offset.at(2) = ref_offset.at(2);
   }
 
-  ///////////////////////////////////// FUNCTION TO READ NOISE CSV AND INTERPOLATE /////////////////////////////////////
-  void generate_noise_vector(const std::string filename) {
-
-    std::cout << "Noise filename = " << filename << std::endl;
-
-    std::string csv_file_name {"/home/michael/HRI/ros2_ws/src/cpp_pubsub/robot_noise/noise_csv_files/"+filename};
-
-    std::vector<double> raw_data;
-    const int num_interp = 49;
-
-    // read csv file
-    readCSV(csv_file_name, raw_data);
-    std::cout << "Length of raw noise array = " << raw_data.size() << std::endl;
-
-    // Display the data stored in the array
-    // std::cout << "Data in the array: ";
-    // for (const auto& value : raw_data) {
-    //     std::cout << value << " ";
-    // }
-    // std::cout << std::endl;
-
-    // interpolate (linear / cosine)
-    robot_noise_vector = linear_interpolate_vec(raw_data, num_interp);
-    std::cout << "Success! Length of new noise vector = " << robot_noise_vector.size() << std::endl;
-  }
 
   ///////////////////////////////////// FUNCTION TO PRINT PARAMETERS /////////////////////////////////////
   void print_params() {
@@ -516,10 +471,9 @@ private:
     std::cout << "\n\nThe current parameters [real_controller] are as follows:\n" << std::endl;
     std::cout << "Free drive mode = " << free_drive << "\n" << std::endl;
     std::cout << "Mapping ratio = " << mapping_ratio << "\n" << std::endl;
-    std::cout << "Use depth parameter = " << use_depth << "\n" << std::endl;
     std::cout << "Participant ID = " << part_id << "\n" << std::endl;
     std::cout << "Alpha ID = " << alpha_id << "\n" << std::endl;
-    std::cout << "Trajectory ID = " << traj_id << "\n" << std::endl;
+    std::cout << "Ring ID = " << ring_id << "\n" << std::endl;
     for (unsigned int i=0; i<10; i++) std::cout << "\n";
   }
 
@@ -528,9 +482,6 @@ private:
 
   rclcpp::Publisher<tutorial_interfaces::msg::PosInfo>::SharedPtr tcp_pos_pub_;
   // rclcpp::TimerBase::SharedPtr tcp_pos_timer_;
-
-  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr record_flag_pub_;
-  rclcpp::TimerBase::SharedPtr record_flag_timer_;
 
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr last_point_pub_;
 
@@ -541,6 +492,8 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_vals_sub_;
 
   rclcpp::Subscription<tutorial_interfaces::msg::Falconpos>::SharedPtr falcon_pos_sub_;
+
+  rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr curr_target_id_sub_;
   
 };
 
@@ -587,7 +540,7 @@ void compute_ik(std::vector<double>& desired_tcp_pos, std::vector<double>& curr_
     res_vals.at(i) = jnt_pos_goal.data(i);
   }
 
-  if (display_time) {
+  if (disp_ik_solve_time) {
     auto finish = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
     std::cout << "Execution of my IK solver function took " << duration.count() << " [microseconds]" << std::endl;
@@ -595,70 +548,6 @@ void compute_ik(std::vector<double>& desired_tcp_pos, std::vector<double>& curr_
   
 }
 
-
-///////////////// Noise helper functions /////////////////
-
-// Function to read CSV file and store data in a C++ array
-void readCSV(const std::string& filename, std::vector<double>& dataArray) {
-    std::ifstream file(filename);
-
-    if (file.is_open()) {
-        std::string line;
-        getline(file, line); // Read the entire line from the CSV
-
-        std::stringstream ss(line);
-        std::string value;
-
-        while (getline(ss, value, ',')) {
-            // Assuming the CSV contains integers; you can modify this part based on your data type
-            double dataValue = std::stod(value);
-            dataArray.push_back(dataValue);
-        }
-
-        file.close();
-    } else {
-        std::cerr << "Unable to open the file: " << filename << std::endl;
-    }
-}
-
-// Function to linearly interpolate between two numbers for a given mu
-double linearInterpolate(double y1, double y2, double mu) { return (y2 - y1) * mu + y1; }
-
-// Function to cosine interpolate between two numbers for a given mu
-double cosineInterpolate(double y1, double y2, double mu) {
-    double angle = mu * M_PI;
-    double mu2 = (1.0 - std::cos(angle)) * 0.5;
-    double res = linearInterpolate(y1, y2, mu2);
-    return res;
-}
-
-// Function to linearly interpolate a vector and return a new vector
-std::vector<double> linear_interpolate_vec(std::vector<double> old_vec, int num_interp) {
-    int num_old_points = old_vec.size();
-    std::vector<double> new_vec = {old_vec.at(0)};
-    for (int i=0; i<num_old_points-1; i++) {
-        for (int j=1; j<num_interp+2; j++) {
-            double mu = (double)j / (double)(num_interp+1);
-            double lin_x = linearInterpolate(old_vec.at(i), old_vec.at(i+1), mu);
-            new_vec.push_back(lin_x);
-        }
-    }
-    return new_vec;
-}
-
-// Function to cosine interpolate a vector and return a new vector
-std::vector<double> cosine_interpolate_vec(std::vector<double> old_vec, int num_interp) {
-    int num_old_points = old_vec.size();
-    std::vector<double> new_vec = {old_vec.at(0)};
-    for (int i=0; i<num_old_points-1; i++) {
-        for (int j=1; j<num_interp+2; j++) {
-            double mu = (double)j / (double)(num_interp+1);
-            double lin_x = cosineInterpolate(old_vec.at(i), old_vec.at(i+1), mu);
-            new_vec.push_back(lin_x);
-        }
-    }
-    return new_vec;
-}
 
 
 ///////////////// other helper functions /////////////////
@@ -690,12 +579,6 @@ void print_joint_vals(std::vector<double>& joint_vals) {
   }
   std::cout << "]" << std::endl;
 }
-
-double get_min(double a, double b) {
-  if (a<b) return a;
-  return b;
-}
-
 
 
 
