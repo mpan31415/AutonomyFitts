@@ -10,7 +10,6 @@ from tutorial_interfaces.msg import PosInfo
 from std_msgs.msg import Bool, Int16
 
 from cpp_pubsub.data_logger import DataLogger
-from cpp_pubsub.traj_utils import get_sine_ref_points
 
 from datetime import datetime
 from time import time
@@ -31,6 +30,7 @@ FITTS_DICT_LIST = [
     {'r_radius': 0.14, 'w_target': 0.02}
 ]
 N_TARGETS = 9
+# TARGET_ORDER_LIST = [0, 5, 1, 6, 2, 7, 3, 8, 4]
 TARGET_ORDER_LIST = [0, 5, 1, 6, 2, 7, 3, 8, 4]
 
 
@@ -69,10 +69,10 @@ class FittsTask(Node):
         self.target_positions = self.get_target_positions()   ## list of tuples
 
         # current_target_id publisher
-        self.curr_target_pub = self.create_publisher(Int16, 'curr_target_id', 1)
+        self.curr_target_pub = self.create_publisher(Int16, 'curr_target_id', 10)
 
         # ring_finished flag publisher
-        self.ring_finished_pub = self.create_publisher(Bool, 'ring_finished', 1)
+        self.ring_finished_pub = self.create_publisher(Bool, 'ring_finished', 10)
 
         # tcp position subscriber
         self.tcp_pos_sub = self.create_subscription(PosInfo, 'tcp_position', self.tcp_pos_callback, 10)
@@ -82,7 +82,7 @@ class FittsTask(Node):
         self.csv_dir = ALL_CSV_DIR + "part" + str(self.part_id) + "/"
 
         # task target variables (dynamic during the task)
-        self.curr_order_list_id = 0
+        self.curr_order_list_id = 1
         self.curr_target_id = TARGET_ORDER_LIST[self.curr_order_list_id]
         # Publish first target (as starting point)
         self.publish_target_id(self.curr_target_id)
@@ -129,7 +129,7 @@ class FittsTask(Node):
         target_positions = []
         r = self.r_radius
         for i in range(N_TARGETS):
-            theta = float(i/N_TARGETS)*2*pi
+            theta = float(i/(N_TARGETS))*2*pi
             tar_y = ORIGIN[1] - r * sin(theta)
             tar_z = ORIGIN[2] + r * cos(theta)
             target_positions.append((tar_y, tar_z))
