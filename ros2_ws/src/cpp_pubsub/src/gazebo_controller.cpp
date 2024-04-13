@@ -238,7 +238,7 @@ public:
     tcp_pos_timer_ = this->create_wall_timer(25ms, std::bind(&GazeboController::tcp_pos_publisher, this));    // publishes at 40 Hz
 
     // countdown publisher, only publishes at whole second points during smoothing
-    countdown_pub_ = this->create_publisher<std_msgs::msg::Float64>("countdown", 10);
+    countdown_pub_ = this->create_publisher<std_msgs::msg::Int16>("countdown", 10);
 
     joint_vals_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
       "joint_states", 10, std::bind(&GazeboController::joint_states_callback, this, std::placeholders::_1));
@@ -280,6 +280,8 @@ private:
         ///////// prepare the trajectory message, introducing artificial latency /////////
         send_control_joint_vals(initial_joint_vals);
       }
+      // publish countdown = 5 to marker publisher
+      send_count(5);
 
 
     } 
@@ -287,7 +289,11 @@ private:
     {
       // 5 seconds to move to the start position and float
       smoothing_count++;
-      if (smoothing_count % control_freq == 0) std::cout << "The smoothing_count is currently " << smoothing_count << "\n" << std::endl;
+      if (smoothing_count % control_freq == 0) {
+        std::cout << "The smoothing_count is currently " << smoothing_count << "\n" << std::endl;
+        int cd_count = (int)(max_smoothing_count - smoothing_count) / control_freq; // [4 -> 0]
+        send_count(cd_count);
+      }
       if (smoothing_count == max_smoothing_count) task_state = 3;
       get_smoothing_target();
 
@@ -335,6 +341,8 @@ private:
           // ring is finished, advance to next task_state
           std::cout << "The Fitts ring is finished! " << smoothing_count << "\n" << std::endl;
           task_state = 4;
+          // send large count number to indicate ring has finished
+          send_count(10);
         }
 
       } 
@@ -409,7 +417,8 @@ private:
 
 
   /////////////////////////////// send control joint values function ///////////////////////////////
-  void send_control_joint_vals(std::vector<double> desired_joint_vals) {
+  void send_control_joint_vals(std::vector<double> desired_joint_vals) 
+  {
     ///////// check limits /////////
     if (!within_limits(desired_joint_vals)) {
       std::cout << "--------\nThese violate the joint limits of the Panda arm, shutting down now !!!\n---------" << std::endl;
@@ -426,36 +435,43 @@ private:
     print_joint_vals(desired_joint_vals);
     controller_pub_->publish(traj_message);
 
-    // Real
+    // Real Robot
     // auto q_desired = sensor_msgs::msg::JointState();
     // q_desired.position = desired_joint_vals;
     // controller_pub_->publish(q_desired);
   }
 
   /////////////////////////////// update target vectors function ///////////////////////////////
-  void update_target_vectors() {
-    double last_theta = ((double)(last_target_id)/(double)(n_targets))*2*M_PI;   // in radians
+  void update_target_vectors() 
+  {
+    // double last_theta = ((double)(last_target_id)/(double)(n_targets))*2*M_PI;   // in radians
     double curr_theta = ((double)(curr_target_id)/(double)(n_targets))*2*M_PI;   // in radians
-    // update last target vector
-    last_target_vec.at(0) = 0.0;
-    last_target_vec.at(1) = origin.at(1) - r_radius*sin(last_theta);
-    last_target_vec.at(2) = origin.at(2) + r_radius*cos(last_theta);
+    // update last target vector (using current tcp_pos)
+    last_target_vec.at(0) = tcp_pos.at(0);
+    last_target_vec.at(1) = tcp_pos.at(1);
+    last_target_vec.at(2) = tcp_pos.at(2);
     // update curr target vector
     curr_target_vec.at(0) = 0.0;
     curr_target_vec.at(1) = origin.at(1) - r_radius*sin(curr_theta);
     curr_target_vec.at(2) = origin.at(2) + r_radius*cos(curr_theta);
     std::cout << "Finished updating the target vectors! \n" << std::endl;
+    // // update last target vector (using calculation)
+    // last_target_vec.at(0) = 0.0;
+    // last_target_vec.at(1) = origin.at(1) - r_radius*sin(last_theta);
+    // last_target_vec.at(2) = origin.at(2) + r_radius*cos(last_theta);
   }
 
   /////////////////////////////// initial 5 sec smoothing control function ///////////////////////////////
-  void get_smoothing_target() {
+  void get_smoothing_target() 
+  {
     robot_offset.at(0) = 0.0;
     robot_offset.at(1) = 0.0;
     robot_offset.at(2) = r_radius;
   }
 
   /////////////////////////////// robot control (trajectory following) function ///////////////////////////////
-  void update_robot_tcp_target(double mu) {
+  void update_robot_tcp_target(double mu) 
+  {
     // cosine interpolate between last and current target vectors
     std::vector<double> interpolated = cosine_interpolate(last_target_vec, curr_target_vec, mu);
     // update robot target vector
@@ -485,6 +501,14 @@ private:
     };
     message.time_from_start = (double) (count - max_prep_count - max_smoothing_count) / control_freq;    // seconds
     tcp_pos_pub_->publish(message);
+  }
+
+  /////////////////////////////// sends count to marker publisher ///////////////////////////////
+  void send_count(int co) 
+  {
+    auto msg = std_msgs::msg::Int16();
+    msg.data = co;
+    countdown_pub_->publish(msg);
   }
 
   /////////////// CALLBACK LISTENING TO THE CURRENT TARGET ID ///////////////
@@ -554,7 +578,7 @@ private:
   rclcpp::Publisher<tutorial_interfaces::msg::PosInfo>::SharedPtr tcp_pos_pub_;
   rclcpp::TimerBase::SharedPtr tcp_pos_timer_;
 
-  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr countdown_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr countdown_pub_;
 
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_vals_sub_;
 

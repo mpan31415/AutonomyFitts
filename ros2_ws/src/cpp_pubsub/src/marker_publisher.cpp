@@ -25,6 +25,8 @@ void generate_fitts_ring(visualization_msgs::msg::Marker &spheres,
 void generate_tcp_arrow(visualization_msgs::msg::Marker &arrow);
 void generate_tcp_marker(visualization_msgs::msg::Marker &tcp_marker);
 
+visualization_msgs::msg::Marker generate_countdown(int count, std::vector<double> &center);
+
 
 
 class MarkerPublisher : public rclcpp::Node
@@ -54,6 +56,19 @@ class MarkerPublisher : public rclcpp::Node
     double r_radius = 0.0;
     double w_target = 0.0;
 
+    // SAME INITIAL TIMING AS THE CONTROLLER
+    const int control_freq = 500;   // [Hz]
+
+    const int prep_time = 5;        // [seconds]
+    const int max_prep_count = control_freq * prep_time;
+
+    const int smoothing_time = 5;   // [seconds]
+    const int max_smoothing_count = control_freq * smoothing_time;
+
+    // count (incoming from the controller file)
+    int count = 0;    // {5 during prep}, {5,4,3,2,1,0 during smoothing}, {10 when ring finished}
+    std::vector<double> countdown_center {0.3, 0.0, 0.05};
+
 
     MarkerPublisher()
     : Node("marker_publisher")
@@ -72,6 +87,10 @@ class MarkerPublisher : public rclcpp::Node
       // create the curr_target_id subscriber
       curr_target_id_sub_ = this->create_subscription<std_msgs::msg::Int16>(
       "curr_target_id", 10, std::bind(&MarkerPublisher::curr_target_id_callback, this, std::placeholders::_1));
+
+      // create the countdown subscriber
+      count_sub_ = this->create_subscription<std_msgs::msg::Int16>(
+      "countdown", 10, std::bind(&MarkerPublisher::count_callback, this, std::placeholders::_1));
     }
 
 
@@ -97,6 +116,10 @@ class MarkerPublisher : public rclcpp::Node
       generate_fitts_ring(fitts_marker_, fitts_ring_origin.at(0), fitts_ring_origin.at(1), fitts_ring_origin.at(2), 
                           n_targets, r_radius, w_target, curr_target_id);
       marker_array_msg.markers.push_back(fitts_marker_);
+
+      // Countdown & text
+      auto countdown_text = generate_countdown(count, countdown_center);
+      marker_array_msg.markers.push_back(countdown_text);
       
       // update markers in Rviz
       marker_pub_->publish(marker_array_msg);
@@ -107,6 +130,11 @@ class MarkerPublisher : public rclcpp::Node
     { 
       curr_target_id = msg.data;
       std::cout << "\n\nReceived a new incoming target ID = " << curr_target_id << " !!!\n\n" << std::endl;
+    }
+
+    /////////////// CALLBACK LISTENING TO THE CURRENT COUNT & TASK STATE ///////////////
+    void count_callback(const std_msgs::msg::Int16 & msg) {
+      count = msg.data;
     }
 
     /////////////// FUNCTION TO PRINT THE PARAMETERS ///////////////
@@ -121,6 +149,7 @@ class MarkerPublisher : public rclcpp::Node
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
 
     rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr curr_target_id_sub_;
+    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr count_sub_;
 
     visualization_msgs::msg::Marker fitts_marker_;
     visualization_msgs::msg::Marker tcp_marker_;
@@ -251,6 +280,53 @@ void generate_tcp_marker(visualization_msgs::msg::Marker &tcp_marker)
   tcp_marker.pose.position.y = 0.0;
   tcp_marker.pose.position.z = 0.0;
 }
+
+
+/////////////////////////////////// FUNCTIONS TO GENERATE COUNTDOWN TEXT ///////////////////////////////////
+visualization_msgs::msg::Marker generate_countdown(int count, std::vector<double> &center)
+{ 
+  auto text = visualization_msgs::msg::Marker();
+
+  // fill-in the text message
+  text.header.frame_id = "/panda_link0";
+  text.header.stamp = rclcpp::Clock().now();
+  text.ns = "marker_publisher";
+  text.action = visualization_msgs::msg::Marker::ADD;
+  text.id = 2;
+  text.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+
+  // height of 'A' is 20 cm
+  text.scale.z = 0.2;
+
+  // set text color and opacity
+  switch (count) {
+    case 5: text.color.r = 1.0; break;
+    case 4: text.color.r = 1.0; break;
+    case 3: text.color.r = 1.0; break;
+    case 2: text.color.r = 1.0; text.color.g = 1.0; break;
+    case 1: text.color.r = 1.0; text.color.g = 1.0; break;
+    case 0: text.color.g = 1.0; break;
+  }
+  text.color.a = 1.0;
+
+  text.text = std::to_string(count);
+
+  if (count == 0) {
+    text.text = "Go!";
+  }
+  if (count == 10) {
+    text.text = "Stop!";
+    text.color.r = 1.0;
+  }
+
+  // constant offset from panda base link
+  text.pose.position.x = center.at(0);
+  text.pose.position.y = center.at(1);
+  text.pose.position.z = center.at(2) + 0.05;
+
+  return text;
+}
+
 
 
 /////////////////////////// THE MAIN FUNCTION ///////////////////////////
