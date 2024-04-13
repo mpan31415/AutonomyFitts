@@ -22,8 +22,9 @@ class PositionTalker : public rclcpp::Node
 public:
 
   // parameters name list
-  std::vector<std::string> param_names = {"mapping_ratio"};
+  std::vector<std::string> param_names = {"mapping_ratio", "ring_id"};
   double mapping_ratio {3.0};
+  int ring_id {0};
 
   // other arrays
   double p[3] {0.0, 0.0, 0.0};
@@ -42,9 +43,15 @@ public:
   // {x, y, z} = {1, 2, 3} DOFS = {in/out, left/right, up/down}
   // positive axes directions are {out, right, up}
   
+  // ring parameters
+  double r_small = 0.1;
+  double r_big = 0.14;
+  double w_small = 0.02;
+  double w_big = 0.04;
 
-  // sine curve's first point is currently all the same
-  // std::vector<double> first_point {0.06, -0.16, -0.01};
+  // ring variables
+  double r_radius {0.0};
+  double w_target {0.0};
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,16 +62,25 @@ public:
 
     // parameter stuff
     this->declare_parameter(param_names.at(0), 3.0);
+    this->declare_parameter(param_names.at(1), 0);
     
     std::vector<rclcpp::Parameter> params = this->get_parameters(param_names);
     mapping_ratio = std::stod(params.at(0).value_to_string().c_str());
+    ring_id = std::stoi(params.at(1).value_to_string().c_str());
     print_params();
 
-    // update first point if not using depth
-    // if (use_depth == 0) first_point = {0.01, -0.16, -0.01};
+    // assign the ring parameters
+    switch (ring_id) {
+      case 1: r_radius = r_small; w_target = w_big;   break;
+      case 2: r_radius = r_big;   w_target = w_big;   break;
+      case 3: r_radius = r_small; w_target = w_small; break;
+      case 4: r_radius = r_big;   w_target = w_small; break;
+    }
 
-    // update centering position using "post_point" computed above
-    // for (size_t i=0; i<3; i++) centering.at(i) = first_point.at(i) / mapping_ratio;
+    // calculate the required starting position (centering position) and update
+    centering.at(0) = 0.0;
+    centering.at(1) = 0.0;
+    centering.at(2) = r_radius / mapping_ratio;
 
     // publisher
     publisher_ = this->create_publisher<tutorial_interfaces::msg::Falconpos>("falcon_position", 10);
@@ -148,6 +164,7 @@ private:
     for (unsigned int i=0; i<10; i++) std::cout << "\n";
     std::cout << "\n\nThe current parameters [position_publisher] are as follows:\n" << std::endl;
     std::cout << "Mapping ratio = " << mapping_ratio << "\n" << std::endl;
+    std::cout << "Ring ID = " << ring_id << "\n" << std::endl;
     for (unsigned int i=0; i<10; i++) std::cout << "\n";
   }
 
