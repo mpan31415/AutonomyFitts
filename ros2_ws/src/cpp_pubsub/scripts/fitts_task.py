@@ -119,8 +119,9 @@ class FittsTask(Node):
         tar_z = self.target_positions[self.curr_target_id][1]
         # check Euclidean distance
         euclid_dist = sqrt((curr_y-tar_y)**2 + (curr_z-tar_z)**2)
-        if euclid_dist < self.w_target:
+        if euclid_dist < self.w_target/2:
             return True
+        print("Euclidean dist = %.3f" % euclid_dist)
         return False
 
 
@@ -129,7 +130,8 @@ class FittsTask(Node):
         target_positions = []
         r = self.r_radius
         for i in range(N_TARGETS):
-            theta = float(i/(N_TARGETS))*2*pi
+            tar_id = TARGET_ORDER_LIST[i]
+            theta = float(tar_id/(N_TARGETS))*2*pi
             tar_y = ORIGIN[1] - r * sin(theta)
             tar_z = ORIGIN[2] + r * cos(theta)
             target_positions.append((tar_y, tar_z))

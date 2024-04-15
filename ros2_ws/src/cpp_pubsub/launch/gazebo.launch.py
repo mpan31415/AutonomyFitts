@@ -51,7 +51,7 @@ def generate_launch_description():
             description='Visualize the robot in Rviz'),
         DeclareLaunchArgument(
             use_fake_hardware_parameter_name,
-            default_value='true',
+            default_value='false',
             description='Use fake hardware'),
         DeclareLaunchArgument(
             fake_sensor_commands_parameter_name,
@@ -125,20 +125,20 @@ def generate_launch_description():
         ############################## THE FOLLOWING ARE MY OWN STUFF ##############################
 
         # joint trajectory controller
-        Node(
-            package='controller_manager',
-            executable='spawner',
-            arguments=['joint_trajectory_controller'],
-            output='screen',
-        ),
-
-        # my controller
         # Node(
         #     package='controller_manager',
         #     executable='spawner',
-        #     arguments=['my_controller'],
+        #     arguments=['joint_trajectory_controller'],
         #     output='screen',
         # ),
+
+        # my controller
+        Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=['my_controller'],
+            output='screen',
+        ),
 
         ### kinect_camera launch ### 
         # IncludeLaunchDescription(
@@ -152,6 +152,7 @@ def generate_launch_description():
             executable='position_talker',
             parameters=[
                 {mapping_ratio_parameter_name: mapping_ratio},
+                {ring_parameter_name: ring}
             ],
             output='screen',
             emulate_tty=True,

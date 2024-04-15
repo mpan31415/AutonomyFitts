@@ -3,6 +3,7 @@
 #include <cmath>
 #include <memory>
 #include <string>
+// #include <algorithm>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64.hpp"
@@ -101,8 +102,8 @@ class MarkerPublisher : public rclcpp::Node
       auto marker_array_msg = visualization_msgs::msg::MarkerArray();
 
       // tcp position projection onto the Fitts plane
-      // generate_tcp_marker(tcp_marker_);
-      generate_tcp_arrow(tcp_marker_);
+      generate_tcp_marker(tcp_marker_);
+      // generate_tcp_arrow(tcp_marker_);
       marker_array_msg.markers.push_back(tcp_marker_);
 
       switch (ring_id) {
@@ -202,7 +203,8 @@ void generate_fitts_ring(visualization_msgs::msg::Marker &spheres,
     if (i<target_id) {
       // light green - already done (half see-through)
       color.g = 1.0;
-      color.a = 0.3;
+      // color.a = 0.3;
+      color.a = 1.0;
     } else if (i==target_id) {
       // red - current target
       color.r = 1.0;

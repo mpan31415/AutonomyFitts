@@ -152,6 +152,7 @@ def generate_launch_description():
             executable='position_talker',
             parameters=[
                 {mapping_ratio_parameter_name: mapping_ratio},
+                {ring_parameter_name: ring}
             ],
             output='screen',
             emulate_tty=True,
@@ -200,22 +201,22 @@ def generate_launch_description():
         #     emulate_tty=True
         # ),
 
-        # publish {camera base frame, depth camera frame}
-        Node(
-            package='cpp_pubsub',
-            executable='const_br',
-            name='const_br'
-        ),
+        # # publish {camera base frame, depth camera frame}
+        # Node(
+        #     package='cpp_pubsub',
+        #     executable='const_br',
+        #     name='const_br'
+        # ),
 
-        # publish recorded point cloud
-        ExecuteProcess(
-                cmd=[
-                    "ros2",
-                    "bag",
-                    "play",
-                    "/home/michael/bag_files/my_bag3",
-                ],
-                output="screen",
-        )
+        # # publish recorded point cloud
+        # ExecuteProcess(
+        #         cmd=[
+        #             "ros2",
+        #             "bag",
+        #             "play",
+        #             "/home/michael/bag_files/my_bag3",
+        #         ],
+        #         output="screen",
+        # )
 
     ])

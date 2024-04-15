@@ -67,14 +67,11 @@ std::vector< std::vector<double> > alphas_dict {
 /////////////////// function declarations ///////////////////
 void compute_ik(std::vector<double>& desired_tcp_pos, std::vector<double>& curr_vals, std::vector<double>& res_vals);
 
-std::vector<double> cosine_interpolate(std::vector<double> start, std::vector<double> end, int mu);
-std::vector<double> lerp(std::vector<double> start, std::vector<double> end, int mu);
 bool within_limits(std::vector<double>& vals);
 bool create_tree();
 void get_chain();
 
 void print_joint_vals(std::vector<double>& joint_vals);
-
 
 
 /////////////// DEFINITION OF NODE CLASS //////////////
@@ -84,7 +81,7 @@ class RealController : public rclcpp::Node
 public:
 
   // parameters name list
-  std::vector<std::string> param_names = {"free_drive", "mapping_ratio", "part_id", "alpha_id", "ring_id"};
+  std::vector<std::string> param_names = {"free_drive", "mapping_ratio", "use_depth", "part_id", "alpha_id", "ring_id"};
   int free_drive {0};
   double mapping_ratio {3.0};
   int part_id {0};
@@ -104,6 +101,8 @@ public:
   std::vector<double> final_joint_vals {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   std::vector<double> home_joint_vals {0, -M_PI_4/2, 0, -5 * M_PI_4/2, 0, M_PI_2, M_PI_4};
 
+  bool control = false;
+  
   const int control_freq = 500;   // the rate at which the "controller_publisher" function is called in [Hz]
   const int tcp_pub_frequency = 40;   // in [Hz]
 
@@ -118,38 +117,27 @@ public:
   const int require_initial_vals_time = 3;
   const int smoothing_time = 5;
   const int float_time = 2;     // time to float at starting position
-  const int shifting_time = 2;
-  const int homing_time = 3;
+  const int shifting_time = 3;
+  const int homing_time = 2;
   const int shutdown_time = 1;
 
-  ////// IMPORTANT TIME: ROBOT'S DEFINED MOVEMENT TIME FROM EACH TARGET TO THE NEXT //////
-  const int robot_movement_time = 3;    // seconds
-
   // calculations of the required counts (based on control frequency)
-  int prep_count = 0;
   const int max_prep_count = control_freq * prep_time;
+  int prep_count = 0;
 
-  int initial_joint_vals_count = 0;
   const int required_initial_vals = control_freq * require_initial_vals_time;   // get initial joint values for X seconds
+  int initial_joint_vals_count = 0;
 
-  int smoothing_count = 0;
-  const int float_count = control_freq * float_time;
   const int max_smoothing_count = control_freq * smoothing_time;
-  
-  int movement_count = 0;
-  const int max_movement_count = control_freq * robot_movement_time;
-  
-  int shifting_count = 0;
-  const int max_shifting_count = control_freq * shifting_time;
 
-  int homing_count = 0;
-  const int max_homing_count = control_freq * homing_time;
+  int max_shifting_count = shifting_time * control_freq;
 
-  int shutdown_count = 0;
-  const int max_shutdown_count = control_freq * shutdown_time;
+  int max_homing_count = homing_time * control_freq;
+
+  int max_shutdown_count = shutdown_time * control_freq;
 
 
-  // OVERALL COUNTER
+  // IMPORTANT: BIG BOSS COUNTER HERE
   int count = 0;
 
   // alpha values = amount of HUMAN INPUT, in the range [0, 1]
@@ -164,28 +152,18 @@ public:
 
 
   // Fitts ring parameters (fixed)
-  std::vector<double> fitts_ring_origin {0.5059, 0.0, 0.4346};
+  std::vector<double> fitts_ring_origin {0.5059, 0.0, 0.4};
   int n_targets = 9;
   double r_small = 0.1;
   double r_big = 0.14;
   double w_small = 0.02;
   double w_big = 0.04;
+  int curr_target_id = 0;   // in the range [0, 8]
 
-  // Fitts ring parameters (for the current trial)
+  // Active Fitts ring parameters (for the current trial)
+  // int ring_id = 1;
   double r_radius = 0.0;
   double w_target = 0.0;
-
-  ///////// OHTER TASK PARAMETERS /////////
-  int task_state = 1;
-  int last_target_id = 0;     // in the range [0, 8]
-  int curr_target_id = 0;     // in the range [0, 8]
-  int incoming_target_id = 0; // in the range [0, 8]
-
-  std::vector<double> last_target_vec {0.5059, 0.0, 0.4346};
-  std::vector<double> curr_target_vec {0.5059, 0.0, 0.4346};
-
-
-  bool ring_finished = false;
 
 
   ////////////////////////////////////////////////////////////////////////
@@ -235,10 +213,16 @@ public:
 
     // tcp position publisher & timer
     tcp_pos_pub_ = this->create_publisher<tutorial_interfaces::msg::PosInfo>("tcp_position", 10);
-    tcp_pos_timer_ = this->create_wall_timer(25ms, std::bind(&RealController::tcp_pos_publisher, this));    // publishes at 40 Hz
+    // tcp_pos_timer_ = this->create_wall_timer(25ms, std::bind(&RealController::tcp_pos_publisher, this));    // publishes at 40 Hz
+
+    // second_last_point publisher
+    last_point_pub_ = this->create_publisher<std_msgs::msg::Bool>("last_point", 10);  // publishes only once
+
+    // controller count publisher, same frequency as the controller
+    // count_pub_ = this->create_publisher<std_msgs::msg::Float64>("controller_count", 10);
 
     // countdown publisher, only publishes at whole second points during smoothing
-    countdown_pub_ = this->create_publisher<std_msgs::msg::Int16>("countdown", 10);
+    countdown_pub_ = this->create_publisher<std_msgs::msg::Float64>("countdown", 10);
 
     joint_vals_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
       "franka/joint_states", 10, std::bind(&RealController::joint_states_callback, this, std::placeholders::_1));
@@ -248,11 +232,7 @@ public:
 
     // create the curr_target_id subscriber
     curr_target_id_sub_ = this->create_subscription<std_msgs::msg::Int16>(
-    "curr_target_id", 10, std::bind(&RealController::incoming_target_id_callback, this, std::placeholders::_1));
-
-    // create the ring_finished flag subscriber
-    ring_finished_sub_ = this->create_subscription<std_msgs::msg::Bool>(
-    "ring_finished", 10, std::bind(&RealController::ring_finished_callback, this, std::placeholders::_1));
+    "curr_target_id", 10, std::bind(&MarkerPublisher::curr_target_id_callback, this, std::placeholders::_1));
 
     //Create Panda tree and get its kinematic chain
     if (!create_tree()) rclcpp::shutdown();
@@ -265,286 +245,188 @@ private:
   ///////////////////////////////////// JOINT CONTROLLER /////////////////////////////////////
   void controller_publisher()
   { 
-    count++;
+    if (!control) {
 
-    if (task_state == 1) /////////////////////////////////////////////////////////////////////////////
-    {
-      // initial 5 second waiting
       prep_count++;
       if (prep_count % control_freq == 0) std::cout << "The prep_count is currently " << prep_count << "\n" << std::endl; 
-      if (prep_count == max_prep_count) task_state = 2;
+      if (prep_count == max_prep_count) control = true;
 
-      if (prep_count > max_prep_count - control_freq * 2) {
+      if (prep_count > max_prep_count - control_freq*2) {
         ///////// warm-up the wait-set 2 seconds before actual control /////////
         ///////// here we need to publish the initial_joint_vals /////////
-        ///////// prepare the trajectory message, introducing artificial latency /////////
-        send_control_joint_vals(initial_joint_vals);
+        auto q_desired = sensor_msgs::msg::JointState();
+        q_desired.position = initial_joint_vals;
+        controller_pub_->publish(q_desired);
       }
-      // publish countdown = 5 to marker publisher
-      send_count(5);
+      
 
+    } else {
 
-    } 
-    else if (task_state == 2) /////////////////////////////////////////////////////////////////////////////
-    {
-      // 5 seconds to move to the start position and float
-      smoothing_count++;
-      if (smoothing_count % control_freq == 0) {
-        std::cout << "The smoothing_count is currently " << smoothing_count << "\n" << std::endl;
-        int cd_count = (int)(max_smoothing_count - smoothing_count) / control_freq; // [4 -> 0]
-        send_count(cd_count);
+      // get the robot control offset in Cartesian space (calling the corresponding function of the ring_id)
+      t_param = (double) (count - max_smoothing_count) / max_recording_count * 2 * M_PI;   // t_param is in the range [0, 2pi], but can be out of range
+      get_robot_control(t_param);      
+
+      // gradually change control authority to fully robot after 10 second trajectory
+      if (count > max_smoothing_count+max_recording_count && count <= max_smoothing_count+max_recording_count+max_shifting_count) {
+        double shift_t = (double) (count - max_smoothing_count - max_recording_count) / max_shifting_count;
+        ax = (1.0 - shift_t) * iax;
+        ay = (1.0 - shift_t) * iay;
+        az = (1.0 - shift_t) * iaz;
       }
-      if (smoothing_count == max_smoothing_count) task_state = 3;
-      get_smoothing_target();
-
-      // perform the convex combination of robot and human offsets, tcp_pos is in robot's base frame
+      // write the joint values at the final trajectory position
+      if (count == max_smoothing_count+max_recording_count+max_shifting_count) {
+        for (size_t i=0; i<7; i++) final_joint_vals.at(i) = curr_joint_vals.at(i);
+      }
+      
+      // perform the convex combination of robot and human offsets
+      // also adding the origin and thus representing it as tcp_pos in the robot's base frame
       tcp_pos.at(0) = origin.at(0) + ax * human_offset.at(0) + (1-ax) * robot_offset.at(0);
       tcp_pos.at(1) = origin.at(1) + ay * human_offset.at(1) + (1-ay) * robot_offset.at(1);
       tcp_pos.at(2) = origin.at(2) + az * human_offset.at(2) + (1-az) * robot_offset.at(2);
+
+      ///////// compute IK /////////
       compute_ik(tcp_pos, curr_joint_vals, ik_joint_vals);
 
-      /////// perform smoothing / floating accordingly
-      double ratio = 0.0;
-      if (smoothing_count <= max_smoothing_count - float_count) {
-        // get lerp position using time
-        ratio = (double) smoothing_count / (max_smoothing_count - float_count);    // need to get there early and "float"
-      } else {
-        ratio = 1.0;
-      }
-      // std::cout << "The smoothing ratio is " << ratio << std::endl;
-      for (unsigned int i=0; i<n_joints; i++) {message_joint_vals.at(i) = ratio * ik_joint_vals.at(i) + (1-ratio) * initial_joint_vals.at(i);}
-      send_control_joint_vals(message_joint_vals);
+      ///////////// publish the tcp position message /////////////
+      if (record_flag && ((count - max_smoothing_count) % (control_freq / 40) == 0)) RealController::tcp_pos_publisher();
 
+      ///////// initial smooth transitioning from current position to Falcon-mapped position /////////
+      count++;  // increase count
 
-    }
-    else if (task_state == 3) /////////////////////////////////////////////////////////////////////////////
-    {
-      // in the process of reaching towards the new target (until completing the ring)
-      if (curr_target_id == incoming_target_id) 
-      { 
-        // case 1: not yet at the new incoming target
-        if (movement_count < max_movement_count) {
-          // case 1.1: at least robot's part is not finished yet
-          movement_count++;
-          double mu = (double) movement_count / max_movement_count;   // mu in [0, 1]
-          update_robot_offset_target(mu);
+      if (count <= max_smoothing_count) {
+        double ratio = 0.0;
+        if (count <= max_smoothing_count - control_freq * float_time) {
+          // get lerp position using time
+          ratio = (double) count / (max_smoothing_count - control_freq * float_time);    // need to get there early and "float"
+        } else {
+          ratio = 1.0;
         }
-        // ((((((((( case 1.2: robot done, human is still lacking ))))))))) -> do nothing to the robot_offset vector
-        // std::cout << "ax = " << ax << " ay = " << ay << " az = " << az << std::endl;
-        tcp_pos.at(0) = origin.at(0) + ax * human_offset.at(0) + (1-ax) * robot_offset.at(0);
-        tcp_pos.at(1) = origin.at(1) + ay * human_offset.at(1) + (1-ay) * robot_offset.at(1);
-        tcp_pos.at(2) = origin.at(2) + az * human_offset.at(2) + (1-az) * robot_offset.at(2);
-        compute_ik(tcp_pos, curr_joint_vals, ik_joint_vals);
-        for (unsigned int i=0; i<n_joints; i++) {message_joint_vals.at(i) = ik_joint_vals.at(i);}
-        send_control_joint_vals(message_joint_vals);
+        // std::cout << "The smoothing ratio is " << ratio << std::endl;
 
-        if (ring_finished) {
-          // ring is finished, advance to next task_state
-          std::cout << "The Fitts ring is finished! " << smoothing_count << "\n" << std::endl;
-          task_state = 4;
-          // send large count number to indicate ring has finished
-          send_count(10);
-        }
-
-      } 
-      else 
-      {
-        // case 2: received new incoming_target_id, previous target reached
-        // ring not yet finished, set incoming target as new active target, update target vectors
-        last_target_id = curr_target_id;
-        curr_target_id = incoming_target_id;
-        update_target_vectors();
-        movement_count = 0;
-      }
-
-      
-    } 
-    else if (task_state == 4) /////////////////////////////////////////////////////////////////////////////
-    {
-      // Ring is finished, gradually shift control entirely back to robot
-      if (shifting_count < max_shifting_count) {
-        // not yet finished shifting
-        shifting_count++;
-        double mu = (double) shifting_count / max_shifting_count;
-        ax = (1.0 - mu) * iax;
-        ay = (1.0 - mu) * iay;
-        az = (1.0 - mu) * iaz;
-        tcp_pos.at(0) = origin.at(0) + ax * human_offset.at(0) + (1-ax) * robot_offset.at(0);
-        tcp_pos.at(1) = origin.at(1) + ay * human_offset.at(1) + (1-ay) * robot_offset.at(1);
-        tcp_pos.at(2) = origin.at(2) + az * human_offset.at(2) + (1-az) * robot_offset.at(2);
-        compute_ik(tcp_pos, curr_joint_vals, ik_joint_vals);
-        for (unsigned int i=0; i<n_joints; i++) {message_joint_vals.at(i) = ik_joint_vals.at(i);}
-        send_control_joint_vals(message_joint_vals);
+        for (unsigned int i=0; i<n_joints; i++) message_joint_vals.at(i) = ratio * ik_joint_vals.at(i) + (1-ratio) * initial_joint_vals.at(i);
 
       } else {
-        // finished shifting back to robot, write the joint values at the final trajectory position 
-        for (size_t i=0; i<7; i++) final_joint_vals.at(i) = curr_joint_vals.at(i);
-        // advance to next task_state
-        task_state = 5;
+        for (unsigned int i=0; i<n_joints; i++) message_joint_vals.at(i) = ik_joint_vals.at(i);
       }
-      
 
-    }
-    else if (task_state == 5) /////////////////////////////////////////////////////////////////////////////
-    {
-      // Go back to self-defined "home" position
-      if (homing_count < max_homing_count) {
-        // have not returned home yet
-        homing_count++;
-        double hr = (double) homing_count / max_homing_count;
+      // bring it home boys
+      if (count > max_smoothing_count + max_recording_count + max_shifting_count) {
+        double hr = 0.0;
+        if (count <= max_smoothing_count + max_recording_count + max_shifting_count + max_homing_count) {
+          hr = (double) (count - max_smoothing_count - max_recording_count - max_shifting_count) / max_homing_count;
+        } else {
+          hr = 1.0;
+        }
         for (size_t i=0; i<7; i++) message_joint_vals.at(i) = hr * home_joint_vals.at(i) + (1-hr) * final_joint_vals.at(i);
-
-      } else {
-        // finished homing, advance to next task_state
-        task_state = 6;
       }
-
-
-    }
-    else if (task_state == 6) /////////////////////////////////////////////////////////////////////////////
-    {
-      // Wait and then shutdown node
-      if (shutdown_count < max_shutdown_count) {
-        shutdown_count++;
-      } else {
+      // shutdown down 1 second after homing
+      if (count == max_smoothing_count + max_recording_count + max_shifting_count + max_homing_count + max_shutdown_count) {
         std::cout << "\n    Trial finished cleanly! Shutting down now ... Bye-bye!    \n" << std::endl;
         rclcpp::shutdown();
       }
 
+      ///////// check limits /////////
+      if (!within_limits(message_joint_vals)) {
+        std::cout << "--------\nThese violate the joint limits of the Panda arm, shutting down now !!!\n---------" << std::endl;
+        rclcpp::shutdown();
+      }
+
+      ///////// prepare and publish the desired_joint_vals message /////////
+      auto q_desired = sensor_msgs::msg::JointState();
+      q_desired.position = message_joint_vals;
+      controller_pub_->publish(q_desired);
+
+      // set the record flag as true
+      if ((count == max_smoothing_count) && (!record_flag)) {
+        record_flag = true;
+        std::cout << "\n\n\n\n\n\n======================= RECORD FLAG IS SET TO => TRUE =======================\n\n\n\n\n\n" << std::endl;
+      }
+
+      // set the record flag as false
+      if ((count == max_smoothing_count + max_recording_count) && (record_flag == true)) {
+        std::cout << "\n\n\n\n\n\n======================= RECORD FLAG IS SET TO => FALSE =======================\n\n\n\n\n\n" << std::endl;
+        record_flag = false; 
+      }
+
+      // ///////////// publish the controller count message /////////////
+      // auto count_msg = std_msgs::msg::Float64();
+      // count_msg.data = count;
+      // count_pub_->publish(count_msg);
+
+      ///////////// check if need to publish the countdown message /////////////
+      if (count % control_freq == 0) {
+        auto count_msg = std_msgs::msg::Float64();
+        count_msg.data = count / control_freq;
+        countdown_pub_->publish(count_msg);
+      }
     }
-
-
   }
 
-
-  /////////////////////////////// send control joint values function ///////////////////////////////
-  void send_control_joint_vals(std::vector<double> desired_joint_vals) 
-  {
-    ///////// check limits /////////
-    if (!within_limits(desired_joint_vals)) {
-      print_joint_vals(desired_joint_vals);
-      std::cout << "--------\nThese violate the joint limits of the Panda arm, shutting down now !!!\n---------" << std::endl;
-      rclcpp::shutdown();
-    }
-    // Gazebo
-    // auto traj_message = trajectory_msgs::msg::JointTrajectory();
-    // traj_message.joint_names = {"panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7"};
-    // auto point = trajectory_msgs::msg::JointTrajectoryPoint();
-    // point.positions = desired_joint_vals;
-    // point.time_from_start.nanosec = (int)(1000 / control_freq) * 1000000;     //// => {milliseconds} * 1e6
-    // traj_message.points = {point};
-    // std::cout << "The joint values [MESSAGE] are ";
-    // print_joint_vals(desired_joint_vals);
-    // controller_pub_->publish(traj_message);
-
-    // Real Robot
-    auto q_desired = sensor_msgs::msg::JointState();
-    q_desired.position = desired_joint_vals;
-    controller_pub_->publish(q_desired);
-    std::cout << "--------\n[REAL] Publishing control joint values now !!!\n---------" << std::endl;
-    // std::cout << "--------\n[FAKE] Publishing control joint values now !!!\n---------" << std::endl;
-  }
-
-  /////////////////////////////// update target vectors function ///////////////////////////////
-  void update_target_vectors() 
-  {
-    // double last_theta = ((double)(last_target_id)/(double)(n_targets))*2*M_PI;   // in radians
-    double curr_theta = ((double)(curr_target_id)/(double)(n_targets))*2*M_PI;   // in radians
-    // update last target vector (using current tcp_pos)
-    last_target_vec.at(0) = tcp_pos.at(0);
-    last_target_vec.at(1) = tcp_pos.at(1);
-    last_target_vec.at(2) = tcp_pos.at(2);
-    // update curr target vector
-    curr_target_vec.at(0) = origin.at(0);
-    curr_target_vec.at(1) = origin.at(1) - r_radius*sin(curr_theta);
-    curr_target_vec.at(2) = origin.at(2) + r_radius*cos(curr_theta);
-    std::cout << "Finished updating the target vectors! \n" << std::endl;
-    // // update last target vector (using calculation)
-    // last_target_vec.at(0) = 0.0;
-    // last_target_vec.at(1) = origin.at(1) - r_radius*sin(last_theta);
-    // last_target_vec.at(2) = origin.at(2) + r_radius*cos(last_theta);
-  }
-
-  /////////////////////////////// initial 5 sec smoothing control function ///////////////////////////////
-  void get_smoothing_target() 
-  {
-    robot_offset.at(0) = 0.0;
-    robot_offset.at(1) = 0.0;
-    robot_offset.at(2) = r_radius;
-  }
-
-  /////////////////////////////// robot control (trajectory following) function ///////////////////////////////
-  void update_robot_offset_target(double mu) 
-  {
-    // cosine interpolate between last and current target vectors
-    std::vector<double> interpolated = cosine_interpolate(last_target_vec, curr_target_vec, mu);
-    // update robot target vector
-    robot_offset.at(0) = 0.0;
-    robot_offset.at(1) = interpolated.at(1);
-    robot_offset.at(2) = interpolated.at(2);
+  /////////////// CALLBACK LISTENING TO THE CURRENT TARGET ID ///////////////
+  void curr_target_id_callback(const std_msgs::msg::Int16 & msg)
+  { 
+    curr_target_id = msg.data;
+    std::cout << "\n\nReceived a new incoming target ID = " << curr_target_id << " !!!\n\n" << std::endl;
   }
 
   ///////////////////////////////////// TCP POSITION PUBLISHER /////////////////////////////////////
   void tcp_pos_publisher()
   { 
+    // if (count > max_smoothing_count + max_recording_count - tcp_pub_frequency) {
+    //   auto lp = std_msgs::msg::Bool();
+    //   lp.data = true;
+    //   std::cout << "\n\n\n\n\n\n======================= SETTING LAST POINT TO => TRUE =======================\n\n\n\n\n\n" << std::endl;
+    //   last_point_pub_->publish(lp);
+    // }
+
+    // note: this is in meters
     auto message = tutorial_interfaces::msg::PosInfo();
+
+    message.ref_position = {
+      origin.at(0) + ref_offset.at(0),
+      origin.at(1) + ref_offset.at(1),
+      origin.at(2) + ref_offset.at(2)
+    };
+
     message.human_position = {
       origin.at(0) + human_offset.at(0),
       origin.at(1) + human_offset.at(1),
       origin.at(2) + human_offset.at(2)
     };
+
     message.robot_position = {
       origin.at(0) + robot_offset.at(0),
       origin.at(1) + robot_offset.at(1),
       origin.at(2) + robot_offset.at(2)
     };
+
     message.tcp_position = {
       tcp_pos.at(0),
       tcp_pos.at(1),
       tcp_pos.at(2)
     };
-    message.time_from_start = (double) (count - max_prep_count - max_smoothing_count) / control_freq;    // seconds
+
+    message.time_from_start = (double) (count - max_smoothing_count) / max_recording_count * 10;    // out of total of 10 seconds
+
     tcp_pos_pub_->publish(message);
-  }
-
-  /////////////////////////////// sends count to marker publisher ///////////////////////////////
-  void send_count(int co) 
-  {
-    auto msg = std_msgs::msg::Int16();
-    msg.data = co;
-    countdown_pub_->publish(msg);
-  }
-
-  /////////////// CALLBACK LISTENING TO THE CURRENT TARGET ID ///////////////
-  void ring_finished_callback(const std_msgs::msg::Bool & msg)
-  {
-    ring_finished = msg.data;
-    std::cout << "\n\nRing finished = " << ring_finished << " !!!\n\n" << std::endl;
-  }
-
-  /////////////// CALLBACK LISTENING TO THE CURRENT TARGET ID ///////////////
-  void incoming_target_id_callback(const std_msgs::msg::Int16 & msg)
-  { 
-    incoming_target_id = msg.data;
-    // std::cout << "\n\nReceived a new incoming target ID = " << incoming_target_id << " !!!\n\n" << std::endl;
+    
   }
 
   ///////////////////////////////////// JOINT STATES SUBSCRIBER /////////////////////////////////////
   void joint_states_callback(const sensor_msgs::msg::JointState & msg)
   { 
     auto data = msg.position;
-    // write into our class variable for storing joint values
     for (unsigned int i=0; i<n_joints; i++) {
       curr_joint_vals.at(i) = data.at(i);
     }
-
     // get and store initial joint values if haven't received enough messages
     if (initial_joint_vals_count < required_initial_vals) {
       for (unsigned int i=0; i<n_joints; i++) {
         initial_joint_vals.at(i) = data.at(i);
       }
       initial_joint_vals_count++;
-      print_joint_vals(initial_joint_vals);
+
+      // print_joint_vals(initial_joint_vals);
     }
   }
 
@@ -554,8 +436,34 @@ private:
     human_offset.at(0) = msg.x / 100 * mapping_ratio;
     human_offset.at(1) = msg.y / 100 * mapping_ratio;
     human_offset.at(2) = msg.z / 100 * mapping_ratio;
-    // std::cout << "x = " << human_offset.at(0) << ", " << "y = " << human_offset.at(1) << ", " << "z = " << human_offset.at(2) << std::endl;
   }
+
+  /////////////////////////////// robot control function ///////////////////////////////
+  void get_robot_control(double t) 
+  { 
+    int within_traj_count = count - max_smoothing_count;
+
+    // make sure t = [0, 2pi], wtj = [0, 5000]
+    if (t < 0.0) {t = 0.0; within_traj_count = 0;}
+    if (t > 2*M_PI) {t = 2*M_PI; within_traj_count = 5000;}
+
+    // assign the noise
+    double noise = robot_noise_vector.at(within_traj_count);
+    if (within_traj_count%100==0) std::cout << "noise_value = " << noise << std::endl;
+
+    // compute reference position and assign into ref_position vector
+    ref_offset.at(0) = 0.0;
+    if (use_depth) ref_offset.at(0) = abs(t-M_PI) / M_PI * depth - (depth/2);
+    ref_offset.at(1) = t / (2*M_PI) * width - (width/2);
+    ref_offset.at(2) = (ph*height) * (sin(pa*(t+ps)) + sin(pb*(t+ps)) + sin(pc*(t+ps)));
+
+    // compute robot target = reference position + noise
+    robot_offset.at(0) = ref_offset.at(0);
+    robot_offset.at(1) = ref_offset.at(1);
+    robot_offset.at(2) = ref_offset.at(2) + noise;
+    // robot_offset.at(2) = ref_offset.at(2);
+  }
+
 
   ///////////////////////////////////// FUNCTION TO PRINT PARAMETERS /////////////////////////////////////
   void print_params() {
@@ -573,17 +481,19 @@ private:
   rclcpp::TimerBase::SharedPtr controller_timer_;
 
   rclcpp::Publisher<tutorial_interfaces::msg::PosInfo>::SharedPtr tcp_pos_pub_;
-  rclcpp::TimerBase::SharedPtr tcp_pos_timer_;
+  // rclcpp::TimerBase::SharedPtr tcp_pos_timer_;
 
-  rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr countdown_pub_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr last_point_pub_;
+
+  // rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr count_pub_;
+
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr countdown_pub_;
 
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_vals_sub_;
 
   rclcpp::Subscription<tutorial_interfaces::msg::Falconpos>::SharedPtr falcon_pos_sub_;
 
   rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr curr_target_id_sub_;
-
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr ring_finished_sub_;
   
 };
 
@@ -639,30 +549,8 @@ void compute_ik(std::vector<double>& desired_tcp_pos, std::vector<double>& curr_
 }
 
 
+
 ///////////////// other helper functions /////////////////
-
-// Function to cosine interpolate between two vectors and return a new vector
-std::vector<double> cosine_interpolate(std::vector<double> start, std::vector<double> end, int mu) {
-  // mu in [0, 1]
-  std::vector<double> interp_vec = start;
-  double angle = mu * M_PI;
-  double interp_ratio = (1.0 - cos(angle)) * 0.5;                                   // in [0, 1]
-  for (unsigned int i=0; i<start.size(); i++) {
-    double interp_point = start.at(i) + interp_ratio * (end.at(i) - start.at(i));   // in [start, end]
-    interp_vec.at(i) = interp_point;
-  }
-  return interp_vec;
-}
-
-// Function to linearly interpolate between two vectors
-std::vector<double> lerp(std::vector<double> start, std::vector<double> end, int mu) {
-  // mu in [0, 1]
-  std::vector<double> lerp_vec = start;
-  for (unsigned int i=0; i<start.size(); i++) {
-    lerp_vec.at(i) = start.at(i) + (end.at(i) - start.at(i)) * mu;
-  }
-  return lerp_vec;
-}
 
 bool within_limits(std::vector<double>& vals) {
   for (unsigned int i=0; i<n_joints; i++) {
@@ -691,7 +579,6 @@ void print_joint_vals(std::vector<double>& joint_vals) {
   }
   std::cout << "]" << std::endl;
 }
-
 
 
 

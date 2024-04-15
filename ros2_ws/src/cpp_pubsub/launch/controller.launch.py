@@ -65,7 +65,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             ring_parameter_name,
             default_value=my_ring_id,
-            description='Trajectory ID parameter'),
+            description='Ring ID parameter'),
 
 
         # real robot controller node [need position_talker to be running]

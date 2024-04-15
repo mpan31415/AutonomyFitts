@@ -224,6 +224,19 @@ gazebo_controller/fast:
 .PHONY : gazebo_controller/fast
 
 #=============================================================================
+# Target rules for targets named real_controller
+
+# Build rule for target.
+real_controller: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 real_controller
+.PHONY : real_controller
+
+# fast build rule for target.
+real_controller/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/real_controller.dir/build.make CMakeFiles/real_controller.dir/build
+.PHONY : real_controller/fast
+
+#=============================================================================
 # Target rules for targets named const_br
 
 # Build rule for target.
@@ -371,6 +384,30 @@ src/position_talker.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/position_talker.dir/build.make CMakeFiles/position_talker.dir/src/position_talker.cpp.s
 .PHONY : src/position_talker.cpp.s
 
+src/real_controller.o: src/real_controller.cpp.o
+.PHONY : src/real_controller.o
+
+# target to build an object file
+src/real_controller.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/real_controller.dir/build.make CMakeFiles/real_controller.dir/src/real_controller.cpp.o
+.PHONY : src/real_controller.cpp.o
+
+src/real_controller.i: src/real_controller.cpp.i
+.PHONY : src/real_controller.i
+
+# target to preprocess a source file
+src/real_controller.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/real_controller.dir/build.make CMakeFiles/real_controller.dir/src/real_controller.cpp.i
+.PHONY : src/real_controller.cpp.i
+
+src/real_controller.s: src/real_controller.cpp.s
+.PHONY : src/real_controller.s
+
+# target to generate assembly for a file
+src/real_controller.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/real_controller.dir/build.make CMakeFiles/real_controller.dir/src/real_controller.cpp.s
+.PHONY : src/real_controller.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -392,6 +429,7 @@ help:
 	@echo "... gazebo_controller"
 	@echo "... marker_publisher"
 	@echo "... position_talker"
+	@echo "... real_controller"
 	@echo "... src/const_br.o"
 	@echo "... src/const_br.i"
 	@echo "... src/const_br.s"
@@ -404,6 +442,9 @@ help:
 	@echo "... src/position_talker.o"
 	@echo "... src/position_talker.i"
 	@echo "... src/position_talker.s"
+	@echo "... src/real_controller.o"
+	@echo "... src/real_controller.i"
+	@echo "... src/real_controller.s"
 .PHONY : help
 
 
