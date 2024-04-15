@@ -67,8 +67,8 @@ std::vector< std::vector<double> > alphas_dict {
 /////////////////// function declarations ///////////////////
 void compute_ik(std::vector<double>& desired_tcp_pos, std::vector<double>& curr_vals, std::vector<double>& res_vals);
 
-std::vector<double> cosine_interpolate(std::vector<double> start, std::vector<double> end, int mu);
-std::vector<double> lerp(std::vector<double> start, std::vector<double> end, int mu);
+std::vector<double> cosine_interpolate(std::vector<double> start, std::vector<double> end, double mu);
+std::vector<double> lerp(std::vector<double> start, std::vector<double> end, double mu);
 bool within_limits(std::vector<double>& vals);
 bool create_tree();
 void get_chain();
@@ -326,11 +326,12 @@ private:
         if (movement_count < max_movement_count) {
           // case 1.1: at least robot's part is not finished yet
           movement_count++;
-          double mu = (double) movement_count / max_movement_count;   // mu in [0, 1]
-          update_robot_offset_target(mu);
+          double mu = (double)(movement_count) / (double)(max_movement_count);   // mu in [0, 1]
+          update_robot_offset(mu);
         }
         // ((((((((( case 1.2: robot done, human is still lacking ))))))))) -> do nothing to the robot_offset vector
         // std::cout << "ax = " << ax << " ay = " << ay << " az = " << az << std::endl;
+        std::cout << "Robot offset = (" << robot_offset.at(0) << ", " << robot_offset.at(1) << ", " << robot_offset.at(2) << ") !!!" << std::endl;
         tcp_pos.at(0) = origin.at(0) + ax * human_offset.at(0) + (1-ax) * robot_offset.at(0);
         tcp_pos.at(1) = origin.at(1) + ay * human_offset.at(1) + (1-ay) * robot_offset.at(1);
         tcp_pos.at(2) = origin.at(2) + az * human_offset.at(2) + (1-az) * robot_offset.at(2);
@@ -426,17 +427,6 @@ private:
       std::cout << "--------\nThese violate the joint limits of the Panda arm, shutting down now !!!\n---------" << std::endl;
       rclcpp::shutdown();
     }
-    // Gazebo
-    // auto traj_message = trajectory_msgs::msg::JointTrajectory();
-    // traj_message.joint_names = {"panda_joint1", "panda_joint2", "panda_joint3", "panda_joint4", "panda_joint5", "panda_joint6", "panda_joint7"};
-    // auto point = trajectory_msgs::msg::JointTrajectoryPoint();
-    // point.positions = desired_joint_vals;
-    // point.time_from_start.nanosec = (int)(1000 / control_freq) * 1000000;     //// => {milliseconds} * 1e6
-    // traj_message.points = {point};
-    // std::cout << "The joint values [MESSAGE] are ";
-    // print_joint_vals(desired_joint_vals);
-    // controller_pub_->publish(traj_message);
-
     // Real Robot
     auto q_desired = sensor_msgs::msg::JointState();
     q_desired.position = desired_joint_vals;
@@ -471,13 +461,21 @@ private:
     robot_offset.at(0) = 0.0;
     robot_offset.at(1) = 0.0;
     robot_offset.at(2) = r_radius;
+    // used only initially, when the robot smoothes towards and floats at the first target
+    last_target_vec.at(0) = 0.0;
+    last_target_vec.at(1) = 0.0;
+    last_target_vec.at(2) = r_radius;
+    curr_target_vec.at(0) = 0.0;
+    curr_target_vec.at(1) = 0.0;
+    curr_target_vec.at(2) = r_radius;
   }
 
   /////////////////////////////// robot control (trajectory following) function ///////////////////////////////
-  void update_robot_offset_target(double mu) 
+  void update_robot_offset(double mu) 
   {
     // cosine interpolate between last and current target vectors
-    std::vector<double> interpolated = cosine_interpolate(last_target_vec, curr_target_vec, mu);
+    // std::vector<double> interpolated = cosine_interpolate(last_target_vec, curr_target_vec, mu);
+    std::vector<double> interpolated = lerp(last_target_vec, curr_target_vec, mu);
     // update robot target vector
     robot_offset.at(0) = 0.0;
     robot_offset.at(1) = interpolated.at(1);
@@ -642,9 +640,9 @@ void compute_ik(std::vector<double>& desired_tcp_pos, std::vector<double>& curr_
 ///////////////// other helper functions /////////////////
 
 // Function to cosine interpolate between two vectors and return a new vector
-std::vector<double> cosine_interpolate(std::vector<double> start, std::vector<double> end, int mu) {
+std::vector<double> cosine_interpolate(std::vector<double> start, std::vector<double> end, double mu) {
   // mu in [0, 1]
-  std::vector<double> interp_vec = start;
+  std::vector<double> interp_vec = {0.0, 0.0, 0.0};
   double angle = mu * M_PI;
   double interp_ratio = (1.0 - cos(angle)) * 0.5;                                   // in [0, 1]
   for (unsigned int i=0; i<start.size(); i++) {
@@ -655,9 +653,9 @@ std::vector<double> cosine_interpolate(std::vector<double> start, std::vector<do
 }
 
 // Function to linearly interpolate between two vectors
-std::vector<double> lerp(std::vector<double> start, std::vector<double> end, int mu) {
+std::vector<double> lerp(std::vector<double> start, std::vector<double> end, double mu) {
   // mu in [0, 1]
-  std::vector<double> lerp_vec = start;
+  std::vector<double> lerp_vec = {0.0, 0.0, 0.0};
   for (unsigned int i=0; i<start.size(); i++) {
     lerp_vec.at(i) = start.at(i) + (end.at(i) - start.at(i)) * mu;
   }

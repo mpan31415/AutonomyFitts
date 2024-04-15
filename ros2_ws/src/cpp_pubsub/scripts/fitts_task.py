@@ -82,8 +82,8 @@ class FittsTask(Node):
         self.csv_dir = ALL_CSV_DIR + "part" + str(self.part_id) + "/"
 
         # task target variables (dynamic during the task)
-        self.curr_order_list_id = 1
-        self.curr_target_id = TARGET_ORDER_LIST[self.curr_order_list_id]
+        self.curr_target_number = 1
+        self.curr_target_id = TARGET_ORDER_LIST[self.curr_target_number]
         # Publish first target (as starting point)
         self.publish_target_id(self.curr_target_id)
 
@@ -115,8 +115,8 @@ class FittsTask(Node):
     def target_is_selected(self):
         curr_y = self.tcp_y
         curr_z = self.tcp_z
-        tar_y = self.target_positions[self.curr_target_id][0]
-        tar_z = self.target_positions[self.curr_target_id][1]
+        tar_y = self.target_positions[self.curr_target_number][0]
+        tar_z = self.target_positions[self.curr_target_number][1]
         # check Euclidean distance
         euclid_dist = sqrt((curr_y-tar_y)**2 + (curr_z-tar_z)**2)
         if euclid_dist < self.w_target/2:
@@ -130,8 +130,8 @@ class FittsTask(Node):
         target_positions = []
         r = self.r_radius
         for i in range(N_TARGETS):
-            tar_id = TARGET_ORDER_LIST[i]
-            theta = float(tar_id/(N_TARGETS))*2*pi
+            target_id = TARGET_ORDER_LIST[i]
+            theta = float(target_id/(N_TARGETS))*2*pi
             tar_y = ORIGIN[1] - r * sin(theta)
             tar_z = ORIGIN[2] + r * cos(theta)
             target_positions.append((tar_y, tar_z))
@@ -155,13 +155,13 @@ class FittsTask(Node):
             # target selected
             else:
                 # advance to next target only if not yet finished whole ring
-                if self.curr_order_list_id == N_TARGETS-1:
+                if self.curr_target_number == N_TARGETS-1:
                     self.finished_ring = True   ## finished entire ring, do not advance to next target
                     self.publish_ring_finished()
                 else:
                     # advanced to next target
-                    self.curr_order_list_id += 1
-                    self.curr_target_id = TARGET_ORDER_LIST[self.curr_order_list_id]
+                    self.curr_target_number += 1
+                    self.curr_target_id = TARGET_ORDER_LIST[self.curr_target_number]
                     print("Target selected, setting next target = %d" % self.curr_target_id)
                     self.publish_target_id(self.curr_target_id)
 
