@@ -100,28 +100,28 @@ class FittsTask(Node):
         msg = Int16()
         msg.data = target_id
         self.curr_target_pub.publish(msg)
-        print("Published current target = %d" % target_id)
+        # print("Published current target = %d" % target_id)
 
 
     ##############################################################################
-    def publish_ring_finished(self):
+    def publish_ring_finished(self, flag):
         msg = Bool()
-        msg.data = True
+        msg.data = flag
         self.ring_finished_pub.publish(msg)
-        print("Published ring_finished flag = True!\n")
+        # print("Published ring_finished flag = \n", flag)
 
 
     ##############################################################################
     def target_is_selected(self):
         curr_y = self.tcp_y
         curr_z = self.tcp_z
-        tar_y = self.target_positions[self.curr_target_number][0]
-        tar_z = self.target_positions[self.curr_target_number][1]
+        tar_y = self.target_positions[self.curr_target_id][0]
+        tar_z = self.target_positions[self.curr_target_id][1]
         # check Euclidean distance
         euclid_dist = sqrt((curr_y-tar_y)**2 + (curr_z-tar_z)**2)
         if euclid_dist < self.w_target/2:
             return True
-        print("Euclidean dist = %.3f" % euclid_dist)
+        # print("Euclidean dist = %.3f" % euclid_dist)
         return False
 
 
@@ -130,9 +130,8 @@ class FittsTask(Node):
         target_positions = []
         r = self.r_radius
         for i in range(N_TARGETS):
-            target_id = TARGET_ORDER_LIST[i]
-            theta = float(target_id/(N_TARGETS))*2*pi
-            tar_y = ORIGIN[1] - r * sin(theta)
+            theta = float(i/(N_TARGETS))*2*pi
+            tar_y = ORIGIN[1] + r * sin(theta)
             tar_z = ORIGIN[2] + r * cos(theta)
             target_positions.append((tar_y, tar_z))
         print("Successfully generated target positions list!")
@@ -150,14 +149,15 @@ class FittsTask(Node):
         if not self.finished_ring:
             # target not selected yet
             if not self.target_is_selected():
-                print("Target %d is not selected yet!" % self.curr_target_id)
+                # print("Target %d is not selected yet!" % self.curr_target_id)
                 self.publish_target_id(self.curr_target_id)
+                self.publish_ring_finished(False)
             # target selected
             else:
                 # advance to next target only if not yet finished whole ring
                 if self.curr_target_number == N_TARGETS-1:
                     self.finished_ring = True   ## finished entire ring, do not advance to next target
-                    self.publish_ring_finished()
+                    self.publish_ring_finished(True)
                 else:
                     # advanced to next target
                     self.curr_target_number += 1

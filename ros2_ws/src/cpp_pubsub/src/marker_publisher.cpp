@@ -130,7 +130,7 @@ class MarkerPublisher : public rclcpp::Node
     void curr_target_id_callback(const std_msgs::msg::Int16 & msg)
     { 
       curr_target_id = msg.data;
-      std::cout << "\n\nReceived a new incoming target ID = " << curr_target_id << " !!!\n\n" << std::endl;
+      // std::cout << "\n\nReceived a new incoming target ID = " << curr_target_id << " !!!\n\n" << std::endl;
     }
 
     /////////////// CALLBACK LISTENING TO THE CURRENT COUNT & TASK STATE ///////////////
@@ -174,8 +174,10 @@ void generate_fitts_ring(visualization_msgs::msg::Marker &spheres,
   spheres.action = visualization_msgs::msg::Marker::ADD;
   spheres.id = 0;
   spheres.type = visualization_msgs::msg::Marker::SPHERE_LIST;
-  spheres.scale.x = target_width / 2; // Sphere radius
-  spheres.scale.y = target_width / 2; // Sphere radius
+  // spheres.scale.x = target_width / 2; // Sphere radius
+  // spheres.scale.y = target_width / 2; // Sphere radius
+  spheres.scale.x = target_width; // Sphere radius
+  spheres.scale.y = target_width; // Sphere radius
   spheres.scale.z = 0.2; // Not used for SPHERE_LIST
 
   // pose relative to the parent frame

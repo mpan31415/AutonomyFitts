@@ -119,11 +119,11 @@ public:
   const int smoothing_time = 5;
   const int float_time = 2;     // time to float at starting position
   const int shifting_time = 2;
-  const int homing_time = 3;
+  const int homing_time = 4;
   const int shutdown_time = 1;
 
   ////// IMPORTANT TIME: ROBOT'S DEFINED MOVEMENT TIME FROM EACH TARGET TO THE NEXT //////
-  const int robot_movement_time = 3;    // seconds
+  const int robot_movement_time = 2;    // seconds
 
   // calculations of the required counts (based on control frequency)
   int prep_count = 0;
@@ -331,7 +331,8 @@ private:
         }
         // ((((((((( case 1.2: robot done, human is still lacking ))))))))) -> do nothing to the robot_offset vector
         // std::cout << "ax = " << ax << " ay = " << ay << " az = " << az << std::endl;
-        std::cout << "Robot offset = (" << robot_offset.at(0) << ", " << robot_offset.at(1) << ", " << robot_offset.at(2) << ") !!!" << std::endl;
+        std::cout << "R = (" << robot_offset.at(0) << ", " << robot_offset.at(1) << ", " << robot_offset.at(2) << ") !!!";
+        std::cout << "H = (" << human_offset.at(0) << ", " << human_offset.at(1) << ", " << human_offset.at(2) << ") !!!" << std::endl;
         tcp_pos.at(0) = origin.at(0) + ax * human_offset.at(0) + (1-ax) * robot_offset.at(0);
         tcp_pos.at(1) = origin.at(1) + ay * human_offset.at(1) + (1-ay) * robot_offset.at(1);
         tcp_pos.at(2) = origin.at(2) + az * human_offset.at(2) + (1-az) * robot_offset.at(2);
@@ -341,7 +342,7 @@ private:
 
         if (ring_finished) {
           // ring is finished, advance to next task_state
-          std::cout << "The Fitts ring is finished! " << smoothing_count << "\n" << std::endl;
+          std::cout << "The Fitts ring is finished! " << "\n" << std::endl;
           task_state = 4;
           // send large count number to indicate ring has finished
           send_count(10);
@@ -366,7 +367,7 @@ private:
       if (shifting_count < max_shifting_count) {
         // not yet finished shifting
         shifting_count++;
-        double mu = (double) shifting_count / max_shifting_count;
+        double mu = (double)(shifting_count) / (double)(max_shifting_count);
         ax = (1.0 - mu) * iax;
         ay = (1.0 - mu) * iay;
         az = (1.0 - mu) * iaz;
@@ -380,6 +381,7 @@ private:
       } else {
         // finished shifting back to robot, write the joint values at the final trajectory position 
         for (size_t i=0; i<7; i++) final_joint_vals.at(i) = curr_joint_vals.at(i);
+        std::cout << "\n\n Finished shifting control back to robot \n\n" << std::endl;
         // advance to next task_state
         task_state = 5;
       }
@@ -392,11 +394,13 @@ private:
       if (homing_count < max_homing_count) {
         // have not returned home yet
         homing_count++;
-        double hr = (double) homing_count / max_homing_count;
+        double hr = (double)(homing_count) / (double)(max_homing_count);
         for (size_t i=0; i<7; i++) message_joint_vals.at(i) = hr * home_joint_vals.at(i) + (1-hr) * final_joint_vals.at(i);
+        send_control_joint_vals(message_joint_vals);
 
       } else {
         // finished homing, advance to next task_state
+        std::cout << "\n\n Finished homing the robot \n\n" << std::endl;
         task_state = 6;
       }
 
@@ -407,6 +411,7 @@ private:
       // Wait and then shutdown node
       if (shutdown_count < max_shutdown_count) {
         shutdown_count++;
+        send_control_joint_vals(home_joint_vals);
       } else {
         std::cout << "\n    Trial finished cleanly! Shutting down now ... Bye-bye!    \n" << std::endl;
         rclcpp::shutdown();
@@ -431,7 +436,7 @@ private:
     auto q_desired = sensor_msgs::msg::JointState();
     q_desired.position = desired_joint_vals;
     controller_pub_->publish(q_desired);
-    std::cout << "--------\n[REAL] Publishing control joint values now !!!\n---------" << std::endl;
+    // std::cout << "--------\n[REAL] Publishing control joint values now !!!\n---------" << std::endl;
     // std::cout << "--------\n[FAKE] Publishing control joint values now !!!\n---------" << std::endl;
   }
 
@@ -441,17 +446,17 @@ private:
     // double last_theta = ((double)(last_target_id)/(double)(n_targets))*2*M_PI;   // in radians
     double curr_theta = ((double)(curr_target_id)/(double)(n_targets))*2*M_PI;   // in radians
     // update last target vector (using current tcp_pos)
-    last_target_vec.at(0) = tcp_pos.at(0);
-    last_target_vec.at(1) = tcp_pos.at(1);
-    last_target_vec.at(2) = tcp_pos.at(2);
+    last_target_vec.at(0) = tcp_pos.at(0) - origin.at(0);
+    last_target_vec.at(1) = tcp_pos.at(1) - origin.at(1);
+    last_target_vec.at(2) = tcp_pos.at(2) - origin.at(2);
     // update curr target vector
-    curr_target_vec.at(0) = origin.at(0);
-    curr_target_vec.at(1) = origin.at(1) - r_radius*sin(curr_theta);
-    curr_target_vec.at(2) = origin.at(2) + r_radius*cos(curr_theta);
+    curr_target_vec.at(0) = 0.0;
+    curr_target_vec.at(1) = r_radius*sin(curr_theta);
+    curr_target_vec.at(2) = r_radius*cos(curr_theta);
     std::cout << "Finished updating the target vectors! \n" << std::endl;
     // // update last target vector (using calculation)
     // last_target_vec.at(0) = 0.0;
-    // last_target_vec.at(1) = origin.at(1) - r_radius*sin(last_theta);
+    // last_target_vec.at(1) = origin.at(1) + r_radius*sin(last_theta);
     // last_target_vec.at(2) = origin.at(2) + r_radius*cos(last_theta);
   }
 
@@ -474,8 +479,8 @@ private:
   void update_robot_offset(double mu) 
   {
     // cosine interpolate between last and current target vectors
-    // std::vector<double> interpolated = cosine_interpolate(last_target_vec, curr_target_vec, mu);
-    std::vector<double> interpolated = lerp(last_target_vec, curr_target_vec, mu);
+    std::vector<double> interpolated = cosine_interpolate(last_target_vec, curr_target_vec, mu);
+    // std::vector<double> interpolated = lerp(last_target_vec, curr_target_vec, mu);
     // update robot target vector
     robot_offset.at(0) = 0.0;
     robot_offset.at(1) = interpolated.at(1);
@@ -517,7 +522,7 @@ private:
   void ring_finished_callback(const std_msgs::msg::Bool & msg)
   {
     ring_finished = msg.data;
-    std::cout << "\n\nRing finished = " << ring_finished << " !!!\n\n" << std::endl;
+    // std::cout << "\n\nRing finished = " << ring_finished << " !!!\n\n" << std::endl;
   }
 
   /////////////// CALLBACK LISTENING TO THE CURRENT TARGET ID ///////////////
@@ -542,7 +547,7 @@ private:
         initial_joint_vals.at(i) = data.at(i);
       }
       initial_joint_vals_count++;
-      print_joint_vals(initial_joint_vals);
+      // print_joint_vals(initial_joint_vals);
     }
   }
 

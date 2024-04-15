@@ -223,8 +223,8 @@ int main(int argc, char * argv[])
   // {x, y, z} = {1, 2, 3} DOFS = {in/out, left/right, up/down}
   // positive axes directions are {out, right, up}
 
-  int choice = 0;
-  // int choice = 1;      // in/out direction locked
+  // int choice = 0;
+  int choice = 1;      // in/out direction locked
 
   ///////////////// CHOOSE YOUR MODE! /////////////////
 
