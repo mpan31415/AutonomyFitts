@@ -7,7 +7,8 @@ from math import sqrt
 class DataLogger:
 
     def __init__(self, csv_dir, part_id, alpha_id, ring_id, hys, hzs, rys, rzs, tys, tzs, 
-                 refys, refzs, target_ids, times_from_start, times, datetimes, move_times):
+                 refys, refzs, target_ids, times_from_start, times, datetimes, move_times,
+                 ave_pupil, left_pupil, right_pupil, left_sizes, right_sizes):
         
         # trial info
         self.csv_dir = csv_dir
@@ -38,9 +39,18 @@ class DataLogger:
         self.times_from_start = times_from_start
         self.times = times
         self.datetimes = datetimes
+        
+        # pupil diameter
+        self.ave_pupil = ave_pupil
+        self.left_pupil = left_pupil
+        self.right_pupil = right_pupil
+        self.left_sizes = left_sizes
+        self.right_sizes = right_sizes
 
+        # csv column names
         self.header_file_name = self.csv_dir + "part" + str(self.part_id) + "_header.csv"
-        self.header_field_names = ['trial_number', 'alpha_id', 'ring_id', 'average_mt', 'mt_list']
+        self.header_field_names = ['trial_number', 'alpha_id', 'ring_id', 'average_mt', 'ave_pupil', 'left_pupil', 'right_pupil', 
+                                   'mt_list', 'left_sizes', 'right_sizes']
 
         self.log_field_names = ['target_id', 'h_err', 'r_err', 't_err', 'hy_err', 'hz_err', 'ry_err', 'rz_err', 'ty_err', 'tz_err',
                                 'refy', 'refz', 'hy', 'hz', 'ry', 'rz', 'ty', 'tz', 'times_from_start', 'times', 'datetimes']
@@ -100,7 +110,12 @@ class DataLogger:
                               self.header_field_names[1]: self.alpha_id,
                               self.header_field_names[2]: self.ring_id,
                               self.header_field_names[3]: self.ave_move_time,
-                              self.header_field_names[4]: self.move_times
+                              self.header_field_names[4]: self.ave_pupil,
+                              self.header_field_names[5]: self.left_pupil,
+                              self.header_field_names[6]: self.right_pupil,
+                              self.header_field_names[7]: self.move_times,
+                              self.header_field_names[8]: self.left_sizes,
+                              self.header_field_names[9]: self.right_sizes
             }
 
             writer = DictWriter(f, fieldnames=self.header_field_names)
