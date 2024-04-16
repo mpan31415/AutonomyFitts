@@ -44,10 +44,10 @@ public:
   // positive axes directions are {out, right, up}
   
   // ring parameters
-  double r_small = 0.1;
-  double r_big = 0.14;
-  double w_small = 0.02;
-  double w_big = 0.04;
+  double r_small = 0.06;
+  double r_big   = 0.12;
+  double w_small = 0.01;
+  double w_big   = 0.02;
 
   // ring variables
   double r_radius {0.0};

@@ -45,11 +45,11 @@ class MarkerPublisher : public rclcpp::Node
 
     // Fitts ring parameters (fixed)
     std::vector<double> fitts_ring_origin {0.5059, 0.0, 0.4346};
-    int n_targets = 9;
-    double r_small = 0.1;
-    double r_big = 0.14;
-    double w_small = 0.02;
-    double w_big = 0.04;
+    int n_targets  = 9;
+    double r_small = 0.06;
+    double r_big   = 0.12;
+    double w_small = 0.01;
+    double w_big   = 0.02;
     int curr_target_id = 0;   // in the range [0, 8]
 
     // Active Fitts ring parameters (for the current trial)

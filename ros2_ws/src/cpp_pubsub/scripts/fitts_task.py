@@ -24,10 +24,10 @@ LOG_DATA = False
 
 ### Fitts rings' parameters
 FITTS_DICT_LIST = [
-    {'r_radius': 0.10, 'w_target': 0.04},
-    {'r_radius': 0.14, 'w_target': 0.04},
-    {'r_radius': 0.10, 'w_target': 0.02},
-    {'r_radius': 0.14, 'w_target': 0.02}
+    {'r_radius': 0.06, 'w_target': 0.02},
+    {'r_radius': 0.12, 'w_target': 0.02},
+    {'r_radius': 0.06, 'w_target': 0.01},
+    {'r_radius': 0.12, 'w_target': 0.01}
 ]
 N_TARGETS = 9
 # TARGET_ORDER_LIST = [0, 5, 1, 6, 2, 7, 3, 8, 4]
