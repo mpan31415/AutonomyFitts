@@ -5,7 +5,6 @@ from rclpy.node import Node
 
 from math import pi, sin, cos, sqrt
 
-from tutorial_interfaces.msg import Falconpos
 from tutorial_interfaces.msg import PosInfo
 from std_msgs.msg import Bool, Int16
 
@@ -78,6 +77,10 @@ class FittsTask(Node):
         self.tcp_pos_sub = self.create_subscription(PosInfo, 'tcp_position', self.tcp_pos_callback, 10)
         self.tcp_pos_sub  # prevent unused variable warning
 
+        # record flag subscriber
+        self.record_flag_sub = self.create_subscription(Bool, 'record', self.record_flag_callback, 10)
+        self.record_flag_sub  # prevent unused variable warning
+
         # file name of the csv sheet
         self.csv_dir = ALL_CSV_DIR + "part" + str(self.part_id) + "/"
 
@@ -93,6 +96,43 @@ class FittsTask(Node):
         self.tcp_z = ORIGIN[2]
 
         self.finished_ring = False
+
+        ####### data logging storage #######
+        self.write_data = LOG_DATA
+        self.record = False
+        self.data_written = False
+
+        # position points (h-human, r-robot, t-total, target/reference)
+        self.hys = []
+        self.hzs = []
+        self.rys = []
+        self.rzs = []
+        self.tys = []
+        self.tzs = []
+        self.refys = []
+        self.refzs = []
+        self.target_ids = []
+
+        # times
+        self.times_from_start = []
+        self.times = []
+        self.datetimes = []
+        self.move_times = []            # movement times between each target and the next [seconds]
+        self.timestamp = None
+        self.got_first_timestamp = False
+
+        # do not log data if in free-drive mode
+        if self.free_drive:
+            self.write_data = False
+        
+        # do not log data if in full autonomy mode
+        if self.alpha_id == 0:
+            self.write_data = False
+
+
+    ##############################################################################
+    def record_flag_callback(self, msg):
+        self.record = msg.data
 
 
     ##############################################################################
@@ -140,12 +180,18 @@ class FittsTask(Node):
 
     ##############################################################################
     def tcp_pos_callback(self, msg: PosInfo):
+        
+        # haven't gotten the first time stamp
+        if self.record and len(self.move_times) == 0 and not self.got_first_timestamp:
+            self.timestamp = time()
+            self.got_first_timestamp = True
 
         # update the TCP position
         self.tcp_x = msg.tcp_position[0]
         self.tcp_y = msg.tcp_position[1]
         self.tcp_z = msg.tcp_position[2]
 
+        # main -> while ring is not finished
         if not self.finished_ring:
             # target not selected yet
             if not self.target_is_selected():
@@ -158,62 +204,74 @@ class FittsTask(Node):
                 if self.curr_target_number == N_TARGETS-1:
                     self.finished_ring = True   ## finished entire ring, do not advance to next target
                     self.publish_ring_finished(True)
+                    # timestamp
+                    mt = time() - self.timestamp
+                    # print("This time interval = ", mt)
+                    self.move_times.append(mt)
+                    self.timestamp = time()
                 else:
                     # advanced to next target
                     self.curr_target_number += 1
                     self.curr_target_id = TARGET_ORDER_LIST[self.curr_target_number]
                     print("Target selected, setting next target = %d" % self.curr_target_id)
                     self.publish_target_id(self.curr_target_id)
+                    # timestamp
+                    mt = time() - self.timestamp
+                    # print("This time interval = ", mt)
+                    self.move_times.append(mt)
+                    self.timestamp = time()
 
 
-        ######## RING FINISHED ########
-        ######## write data to csv & shutdown
+            ### record data if flag is true ###
+            if self.record:
+                
+                # human positions
+                self.hys.append(msg.human_position[1])
+                self.hzs.append(msg.human_position[2])
 
-        
-        # if self.record:
-        #     # self.get_logger().info('Recording the tcp position: x = %.3f, y = %.3f, z = %.3f ' % (msg.x, msg.y, msg.z))
-        #     self.refxs.append(msg.ref_position[0])
-        #     self.refys.append(msg.ref_position[1])
-        #     self.refzs.append(msg.ref_position[2])
+                # robot positions
+                self.rys.append(msg.robot_position[1])
+                self.rzs.append(msg.robot_position[2])
 
-        #     self.hxs.append(msg.human_position[0])
-        #     self.hys.append(msg.human_position[1])
-        #     self.hzs.append(msg.human_position[2])
+                # total positions
+                self.tys.append(msg.tcp_position[1])
+                self.tzs.append(msg.tcp_position[2])
 
-        #     self.rxs.append(msg.robot_position[0])
-        #     self.rys.append(msg.robot_position[1])
-        #     self.rzs.append(msg.robot_position[2])
+                # target positions
+                self.refys.append(self.target_positions[self.curr_target_id][0])
+                self.refzs.append(self.target_positions[self.curr_target_id][1])
 
-        #     self.txs.append(msg.tcp_position[0])
-        #     self.tys.append(msg.tcp_position[1])
-        #     self.tzs.append(msg.tcp_position[2])
+                # target ids
+                self.target_ids.append(self.curr_target_id)
 
-        #     self.times_from_start.append(msg.time_from_start)
-        #     self.times.append(time())
-        #     self.datetimes.append(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+                self.times_from_start.append(msg.time_from_start)
+                self.times.append(time())
+                self.datetimes.append(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
-        #     # print("Appending new data, currently at size %d" % len(self.hxs))
-        #     # print("self.last point is %s" % self.last_point)
+                # print("Appending new data, currently at size %d" % len(self.hxs))
+                # print("self.last point is %s" % self.last_point)
 
-        #     if self.last_point and not self.data_written:
-        #         # print("\n\nWe have finished recording!, writing to csv now!\n\n")
-        #         # we have finished recording points, write to csv file now
-        #         if self.write_data:
-        #             self.write_to_csv()
-        #             self.data_written = True
+
+        ########### RING FINISHED! WRITE DATA TO CSV FILES! ###########
+        if not self.data_written:
+            print("\n\nWe have finished recording, writing to csv files now!\n\n")
+            # we have finished recording points, write to csv file now
+            if self.write_data:
+                self.write_to_csv()
+                self.data_written = True
 
 
     ##############################################################################
-    # def write_to_csv(self):
+    def write_to_csv(self):
 
-    #     dl = DataLogger(self.csv_dir, self.part_id, self.alpha_id, self.ring_id, self.refxs, self.refys, self.refzs, self.hxs, self.hys, self.hzs,
-    #                     self.rxs, self.rys, self.rzs, self.txs, self.tys, self.tzs, self.times_from_start, self.times, self.datetimes)
+        dl = DataLogger(self.csv_dir, self.part_id, self.alpha_id, self.ring_id, self.hys, self.hzs, self.rys, self.rzs, self.tys, self.tzs, 
+                        self.refys, self.refzs, self.target_ids, self.times_from_start, self.times, self.datetimes, self.move_times)
 
-    #     dl.calc_error(self.use_depth)
+        dl.calculate()
 
-    #     dl.write_header()
+        dl.write_header()
         
-    #     dl.log_data()
+        dl.log_data()
 
     
     ##############################################################################

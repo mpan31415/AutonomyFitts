@@ -110,7 +110,8 @@ class MarkerPublisher : public rclcpp::Node
       marker_array_msg.markers.push_back(fitts_marker_);
 
       // Countdown & text
-      auto countdown_text = generate_countdown(count, countdown_center);
+      // auto countdown_text = generate_countdown(count, countdown_center);
+      auto countdown_text = generate_countdown(count, fitts_ring_origin);
       marker_array_msg.markers.push_back(countdown_text);
       
       // update markers in Rviz
@@ -271,7 +272,7 @@ void generate_tcp_marker(visualization_msgs::msg::Marker &tcp_marker)
   tcp_marker.color.a = 1.0;
   
   // zero offset from the panda tcp link frame
-  tcp_marker.pose.position.x = 0.02;    // push the marker forwards by 1cm
+  tcp_marker.pose.position.x = 0.005;
   tcp_marker.pose.position.y = 0.0;
   tcp_marker.pose.position.z = 0.0;
 }
@@ -291,7 +292,7 @@ visualization_msgs::msg::Marker generate_countdown(int count, std::vector<double
   text.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
 
   // height of 'A' is 20 cm
-  text.scale.z = 0.2;
+  text.scale.z = 0.05;
 
   // set text color and opacity
   switch (count) {
@@ -317,7 +318,8 @@ visualization_msgs::msg::Marker generate_countdown(int count, std::vector<double
   // constant offset from panda base link
   text.pose.position.x = center.at(0);
   text.pose.position.y = center.at(1);
-  text.pose.position.z = center.at(2) + 0.05;
+  // text.pose.position.z = center.at(2) + 0.05;
+  text.pose.position.z = center.at(2);
 
   return text;
 }

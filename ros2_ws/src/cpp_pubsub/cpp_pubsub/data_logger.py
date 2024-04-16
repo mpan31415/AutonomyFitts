@@ -6,120 +6,71 @@ from math import sqrt
 #####################################################################################################
 class DataLogger:
 
-    def __init__(self, csv_dir, part_id, alpha_id, traj_id, 
-                 refxs, refys, refzs, hxs, hys, hzs, rxs, rys, rzs, txs, tys, tzs, 
-                 times_from_start, times, datetimes):
+    def __init__(self, csv_dir, part_id, alpha_id, ring_id, hys, hzs, rys, rzs, tys, tzs, 
+                 refys, refzs, target_ids, times_from_start, times, datetimes, move_times):
         
         # trial info
         self.csv_dir = csv_dir
         self.part_id = part_id
         self.alpha_id = alpha_id
-        self.traj_id = traj_id
+        self.ring_id = ring_id
 
-        # reference
-        self.refxs = refxs
-        self.refys = refys
-        self.refzs = refzs
-        
         # human
-        self.hxs = hxs
         self.hys = hys
         self.hzs = hzs
-        self.num_points = len(self.hxs)
+        self.num_points = len(self.hys)
 
         # robot
-        self.rxs = rxs
         self.rys = rys
         self.rzs = rzs
 
         # total (human + robot)
-        self.txs = txs
         self.tys = tys
         self.tzs = tzs
 
+        # reference positions
+        self.refys = refys
+        self.refzs = refzs
+        self.target_ids = target_ids
+
         # other info
+        self.move_times = move_times
         self.times_from_start = times_from_start
         self.times = times
         self.datetimes = datetimes
 
         self.header_file_name = self.csv_dir + "part" + str(self.part_id) + "_header.csv"
-        self.header_field_names = ['trial_number', 'alpha_id', 'traj_id', 'human_ave', 'robot_ave', 'overall_ave',
-                                   'human_total', 'robot_total', 'overall_total', 'human_dim_ave', 'robot_dim_ave', 'overall_dim_ave', 
-                                   'human_dim_total', 'robot_dim_total', 'overall_dim_total']
+        self.header_field_names = ['trial_number', 'alpha_id', 'ring_id', 'average_mt', 'mt_list']
+
+        self.log_field_names = ['target_id', 'h_err', 'r_err', 't_err', 'hy_err', 'hz_err', 'ry_err', 'rz_err', 'ty_err', 'tz_err',
+                                'refy', 'refz', 'hy', 'hz', 'ry', 'rz', 'ty', 'tz', 'times_from_start', 'times', 'datetimes']
 
 
     ##############################################################################
-    def calc_error(self, use_depth):
+    def calculate(self):
         
-        ########################################### THESE GO INTO THE 400-LINE FILE ###########################################
+        ########################################### THESE GO INTO THE XXX-LINE FILE ###########################################
         # human error lists in each dim
-        self.hx_err_list = [abs(self.hxs[i] - self.refxs[i]) for i in range(self.num_points)]
         self.hy_err_list = [abs(self.hys[i] - self.refys[i]) for i in range(self.num_points)]
         self.hz_err_list = [abs(self.hzs[i] - self.refzs[i]) for i in range(self.num_points)]
 
         # robot error lists in each dim
-        self.rx_err_list = [abs(self.rxs[i] - self.refxs[i]) for i in range(self.num_points)]
         self.ry_err_list = [abs(self.rys[i] - self.refys[i]) for i in range(self.num_points)]
         self.rz_err_list = [abs(self.rzs[i] - self.refzs[i]) for i in range(self.num_points)]
 
         # overall error lists in each dim
-        self.tx_err_list = [abs(self.txs[i] - self.refxs[i]) for i in range(self.num_points)]
         self.ty_err_list = [abs(self.tys[i] - self.refys[i]) for i in range(self.num_points)]
         self.tz_err_list = [abs(self.tzs[i] - self.refzs[i]) for i in range(self.num_points)]
 
         # human, robot & overall Euclidean norm error list
-        if use_depth:
-            self.h_err_list = [sqrt((self.hx_err_list[i])**2 + (self.hy_err_list[i])**2 + (self.hz_err_list[i])**2) for i in range(self.num_points)]
-            self.r_err_list = [sqrt((self.rx_err_list[i])**2 + (self.ry_err_list[i])**2 + (self.rz_err_list[i])**2) for i in range(self.num_points)]
-            self.t_err_list = [sqrt((self.tx_err_list[i])**2 + (self.ty_err_list[i])**2 + (self.tz_err_list[i])**2) for i in range(self.num_points)]
-        else:
-            self.h_err_list = [sqrt((self.hy_err_list[i])**2 + (self.hz_err_list[i])**2) for i in range(self.num_points)]
-            self.r_err_list = [sqrt((self.ry_err_list[i])**2 + (self.rz_err_list[i])**2) for i in range(self.num_points)]
-            self.t_err_list = [sqrt((self.ty_err_list[i])**2 + (self.tz_err_list[i])**2) for i in range(self.num_points)]
+        self.h_err_list = [sqrt((self.hy_err_list[i])**2 + (self.hz_err_list[i])**2) for i in range(self.num_points)]
+        self.r_err_list = [sqrt((self.ry_err_list[i])**2 + (self.rz_err_list[i])**2) for i in range(self.num_points)]
+        self.t_err_list = [sqrt((self.ty_err_list[i])**2 + (self.tz_err_list[i])**2) for i in range(self.num_points)]
 
         ########################################### THESE GO INTO THE HEADER FILE ###########################################
 
-        # total human errors
-        self.hx_err_total = sum(self.hx_err_list)
-        self.hy_err_total = sum(self.hy_err_list)
-        self.hz_err_total = sum(self.hz_err_list)
-        self.h_dim_err_total = [self.hx_err_total, self.hy_err_total, self.hz_err_total]    # log this
-        self.h_err_total = sum(self.h_err_list)                                             # log this
-
-        # total robot errors
-        self.rx_err_total = sum(self.rx_err_list)
-        self.ry_err_total = sum(self.ry_err_list)
-        self.rz_err_total = sum(self.rz_err_list)
-        self.r_dim_err_total = [self.rx_err_total, self.ry_err_total, self.rz_err_total]    # log this
-        self.r_err_total = sum(self.r_err_list)                                             # log this
-
-        # total overall errors
-        self.tx_err_total = sum(self.tx_err_list)
-        self.ty_err_total = sum(self.ty_err_list)
-        self.tz_err_total = sum(self.tz_err_list)
-        self.t_dim_err_total = [self.tx_err_total, self.ty_err_total, self.tz_err_total]    # log this
-        self.t_err_total = sum(self.t_err_list)                                             # log this
-
-        # average human errors
-        self.hx_err_ave = self.hx_err_total / self.num_points
-        self.hy_err_ave = self.hy_err_total / self.num_points
-        self.hz_err_ave = self.hz_err_total / self.num_points
-        self.h_dim_err_ave = [self.hx_err_ave, self.hy_err_ave, self.hz_err_ave]            # log this
-        self.h_err_ave = self.h_err_total / self.num_points                                 # log this
-
-        # average robot errors
-        self.rx_err_ave = self.rx_err_total / self.num_points
-        self.ry_err_ave = self.ry_err_total / self.num_points
-        self.rz_err_ave = self.rz_err_total / self.num_points
-        self.r_dim_err_ave = [self.rx_err_ave, self.ry_err_ave, self.rz_err_ave]            # log this
-        self.r_err_ave = self.r_err_total / self.num_points                                 # log this
-
-        # average overall errors
-        self.tx_err_ave = self.tx_err_total / self.num_points
-        self.ty_err_ave = self.ty_err_total / self.num_points
-        self.tz_err_ave = self.tz_err_total / self.num_points
-        self.t_dim_err_ave = [self.tx_err_ave, self.ty_err_ave, self.tz_err_ave]            # log this
-        self.t_err_ave = self.t_err_total / self.num_points                                 # log this
+        # average movement time
+        self.ave_move_time = sum(self.move_times) / len(self.move_times)
 
 
     ##############################################################################
@@ -147,19 +98,9 @@ class DataLogger:
             # dictionary that we want to add as a new row
             new_trial_data = {self.header_field_names[0]: trial_id,
                               self.header_field_names[1]: self.alpha_id,
-                              self.header_field_names[2]: self.traj_id,
-                              self.header_field_names[3]: self.h_err_ave,
-                              self.header_field_names[4]: self.r_err_ave,
-                              self.header_field_names[5]: self.t_err_ave,
-                              self.header_field_names[6]: self.h_err_total,
-                              self.header_field_names[7]: self.r_err_total,
-                              self.header_field_names[8]: self.t_err_total,
-                              self.header_field_names[9]: self.h_dim_err_ave,
-                              self.header_field_names[10]: self.r_dim_err_ave,
-                              self.header_field_names[11]: self.t_dim_err_ave,
-                              self.header_field_names[12]: self.h_dim_err_total,
-                              self.header_field_names[13]: self.r_dim_err_total,
-                              self.header_field_names[14]: self.t_dim_err_total
+                              self.header_field_names[2]: self.ring_id,
+                              self.header_field_names[3]: self.ave_move_time,
+                              self.header_field_names[4]: self.move_times
             }
 
             writer = DictWriter(f, fieldnames=self.header_field_names)
@@ -176,18 +117,49 @@ class DataLogger:
     ##############################################################################
     def log_data(self):
         
-        with open(self.data_file_name, 'w', newline='') as file:
+        with open(self.data_file_name, 'a', newline='') as file:
 
-            wr = writer(file)
+            writer = DictWriter(file, fieldnames=self.log_field_names)
+            writer.writeheader()
+
             # write datapoints [recorded trajectory points]
             for i in range(self.num_points):
-                wr.writerow([self.refxs[i], self.refys[i], self.refzs[i],       # this was added (for noisy robot), and a few below also
-                             self.hxs[i], self.hys[i], self.hzs[i], self.rxs[i], self.rys[i], self.rzs[i],
-                             self.txs[i], self.tys[i], self.tzs[i], self.h_err_list[i], self.h_err_list, self.t_err_list[i],
-                             self.hx_err_list[i], self.hy_err_list[i], self.hz_err_list[i],
-                             self.rx_err_list[i], self.ry_err_list[i], self.rz_err_list[i],
-                             self.tx_err_list[i], self.ty_err_list[i], self.tz_err_list[i],
-                             self.times_from_start[i], self.times[i], self.datetimes[i]])
+                
+                # dictionary that we want to add as a new row
+                new_data_point = {self.log_field_names[0]: self.target_ids[i],
+                                  self.log_field_names[1]: self.h_err_list[i],
+                                  self.log_field_names[2]: self.r_err_list[i],
+                                  self.log_field_names[3]: self.t_err_list[i],
+                                  self.log_field_names[4]: self.hy_err_list[i],
+                                  self.log_field_names[5]: self.hz_err_list[i],
+                                  self.log_field_names[6]: self.ry_err_list[i],
+                                  self.log_field_names[7]: self.rz_err_list[i],
+                                  self.log_field_names[8]: self.ty_err_list[i],
+                                  self.log_field_names[9]: self.tz_err_list[i],
+                                  self.log_field_names[10]: self.refys[i],
+                                  self.log_field_names[11]: self.refzs[i],
+                                  self.log_field_names[12]: self.hys[i],
+                                  self.log_field_names[13]: self.hzs[i],
+                                  self.log_field_names[14]: self.rys[i],
+                                  self.log_field_names[15]: self.rzs[i],
+                                  self.log_field_names[16]: self.tys[i],
+                                  self.log_field_names[17]: self.tzs[i],
+                                  self.log_field_names[18]: self.times_from_start[i],
+                                  self.log_field_names[19]: self.times[i],
+                                  self.log_field_names[20]: self.datetimes[i]
+                }
+                writer.writerow(new_data_point)
+
+                # wr.writerow([self.target_ids[i], self.refys[i], self.refzs[i], ])
+                
+                    # wr.writerow([self.refxs[i], self.refys[i], self.refzs[i],       # this was added (for noisy robot), and a few below also
+                    #             self.hxs[i], self.hys[i], self.hzs[i], self.rxs[i], self.rys[i], self.rzs[i],
+                    #             self.txs[i], self.tys[i], self.tzs[i], self.h_err_list[i], self.h_err_list, self.t_err_list[i],
+                    #             self.hx_err_list[i], self.hy_err_list[i], self.hz_err_list[i],
+                    #             self.rx_err_list[i], self.ry_err_list[i], self.rz_err_list[i],
+                    #             self.tx_err_list[i], self.ty_err_list[i], self.tz_err_list[i],
+                    #             self.times_from_start[i], self.times[i], self.datetimes[i]])
+
 
             print("\nSuccesfully opened file %s and finished logging data !!!\n" % self.data_file_name)
 
@@ -198,13 +170,13 @@ class DataLogger:
 
 #     # data for testing
 #     part_id = 1
-#     traj_id = 1
+#     ring_id = 1
 #     alpha_id = 3
 
 #     csv_dir = "/home/michael/HRI/ros2_ws/src/cpp_pubsub/data_logging/csv_logs/part" + str(part_id) + "/"
 
 #     # initialize the data logger object, and write to files
-#     michael = DataLogger(csv_dir, part_id, traj_id, alpha_id, [1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3])
+#     michael = DataLogger(csv_dir, part_id, ring_id, alpha_id, [1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3])
 
 #     # note, we must call write_header before log_data, since header generates the data_file_name
 #     michael.write_header()

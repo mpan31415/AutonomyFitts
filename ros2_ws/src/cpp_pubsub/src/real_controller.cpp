@@ -137,7 +137,7 @@ public:
   const int max_smoothing_count = control_freq * smoothing_time;
   
   int movement_count = 0;
-  const int max_movement_count = control_freq * robot_movement_time;
+  int max_movement_count = control_freq * robot_movement_time;
   
   int shifting_count = 0;
   const int max_shifting_count = control_freq * shifting_time;
@@ -186,6 +186,7 @@ public:
 
 
   bool ring_finished = false;
+  bool record_flag = false;
 
 
   ////////////////////////////////////////////////////////////////////////
@@ -229,6 +230,8 @@ public:
       case 4: r_radius = r_big;   w_target = w_small; break;
     }
 
+    if (r_radius == r_small) max_movement_count /= 2;
+
     // joint controller publisher & timer
     controller_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("desired_joint_vals", 10);
     controller_timer_ = this->create_wall_timer(2ms, std::bind(&RealController::controller_publisher, this));    // controls at 500 Hz
@@ -236,6 +239,9 @@ public:
     // tcp position publisher & timer
     tcp_pos_pub_ = this->create_publisher<tutorial_interfaces::msg::PosInfo>("tcp_position", 10);
     tcp_pos_timer_ = this->create_wall_timer(25ms, std::bind(&RealController::tcp_pos_publisher, this));    // publishes at 40 Hz
+
+    // recording flag publisher & timer
+    record_flag_pub_ = this->create_publisher<std_msgs::msg::Bool>("record", 10);
 
     // countdown publisher, only publishes at whole second points during smoothing
     countdown_pub_ = this->create_publisher<std_msgs::msg::Int16>("countdown", 10);
@@ -271,7 +277,7 @@ private:
     {
       // initial 5 second waiting
       prep_count++;
-      if (prep_count % control_freq == 0) std::cout << "The prep_count is currently " << prep_count << "\n" << std::endl; 
+      if (prep_count % control_freq == 0) std::cout << "Preparation: " << prep_count/control_freq << " / " << prep_time << " seconds \n" << std::endl; 
       if (prep_count == max_prep_count) task_state = 2;
 
       if (prep_count > max_prep_count - control_freq * 2) {
@@ -290,7 +296,7 @@ private:
       // 5 seconds to move to the start position and float
       smoothing_count++;
       if (smoothing_count % control_freq == 0) {
-        std::cout << "The smoothing_count is currently " << smoothing_count << "\n" << std::endl;
+        std::cout << "Smoothing: " << smoothing_count/control_freq << " / " << smoothing_time << " seconds \n" << std::endl;
         int cd_count = (int)(max_smoothing_count - smoothing_count) / control_freq; // [4 -> 0]
         send_count(cd_count);
       }
@@ -318,7 +324,16 @@ private:
 
     }
     else if (task_state == 3) /////////////////////////////////////////////////////////////////////////////
-    {
+    { 
+      // set the record flag as true (if not already)
+      if (!record_flag) {
+        record_flag = true;
+        auto message = std_msgs::msg::Bool();
+        message.data = record_flag;
+        record_flag_pub_->publish(message);
+        std::cout << "\n\n\n\n\n\n======================= RECORD FLAG IS SET TO => TRUE =======================\n\n\n\n\n\n" << std::endl;
+      }
+
       // in the process of reaching towards the new target (until completing the ring)
       if (curr_target_id == incoming_target_id) 
       { 
@@ -346,9 +361,15 @@ private:
           task_state = 4;
           // send large count number to indicate ring has finished
           send_count(10);
+          // set the record flag to false
+          record_flag = false;
+          auto message = std_msgs::msg::Bool();
+          message.data = record_flag;
+          record_flag_pub_->publish(message);
+          std::cout << "\n\n\n\n\n\n======================= RECORD FLAG IS SET TO => FALSE =======================\n\n\n\n\n\n" << std::endl;
         }
 
-      } 
+      }
       else 
       {
         // case 2: received new incoming_target_id, previous target reached
@@ -362,7 +383,8 @@ private:
       
     } 
     else if (task_state == 4) /////////////////////////////////////////////////////////////////////////////
-    {
+    { 
+      if (shifting_count % control_freq == 0) std::cout << "Shifting: " << shifting_count/control_freq << " / " << shifting_time << " seconds \n" << std::endl; 
       // Ring is finished, gradually shift control entirely back to robot
       if (shifting_count < max_shifting_count) {
         // not yet finished shifting
@@ -389,7 +411,8 @@ private:
 
     }
     else if (task_state == 5) /////////////////////////////////////////////////////////////////////////////
-    {
+    { 
+      if (homing_count % control_freq == 0) std::cout << "Homing: " << homing_count/control_freq << " / " << homing_time << " seconds \n" << std::endl;
       // Go back to self-defined "home" position
       if (homing_count < max_homing_count) {
         // have not returned home yet
@@ -577,6 +600,8 @@ private:
 
   rclcpp::Publisher<tutorial_interfaces::msg::PosInfo>::SharedPtr tcp_pos_pub_;
   rclcpp::TimerBase::SharedPtr tcp_pos_timer_;
+
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr record_flag_pub_;
 
   rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr countdown_pub_;
 
