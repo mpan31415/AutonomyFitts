@@ -123,7 +123,8 @@ public:
   const int shutdown_time = 1;
 
   ////// IMPORTANT TIME: ROBOT'S DEFINED MOVEMENT TIME FROM EACH TARGET TO THE NEXT //////
-  const int robot_movement_time = 2;    // seconds
+  const double big_movement_time   = 1.3;    // seconds
+  const double small_movement_time = 0.8;    // seconds
 
   // calculations of the required counts (based on control frequency)
   int prep_count = 0;
@@ -137,7 +138,7 @@ public:
   const int max_smoothing_count = control_freq * smoothing_time;
   
   int movement_count = 0;
-  int max_movement_count = control_freq * robot_movement_time;
+  int max_movement_count = (int) control_freq * big_movement_time;   // assume it is a big ring
   
   int shifting_count = 0;
   const int max_shifting_count = control_freq * shifting_time;
@@ -230,7 +231,7 @@ public:
       case 4: r_radius = r_big;   w_target = w_small; break;
     }
 
-    if (r_radius == r_small) max_movement_count /= 2;
+    if (r_radius == r_small) max_movement_count = (int) control_freq * small_movement_time;;
 
     // joint controller publisher & timer
     controller_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("desired_joint_vals", 10);

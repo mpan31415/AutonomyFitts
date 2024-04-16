@@ -18,7 +18,7 @@ ORIGIN = [0.5059, 0.0, 0.4346]   # this is in [meters]
 
 ALL_CSV_DIR = "/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/data_logging/csv_logs/"
 
-LOG_DATA = False
+LOG_DATA = True
 
 
 ### Fitts rings' parameters
@@ -253,10 +253,10 @@ class FittsTask(Node):
 
 
         ########### RING FINISHED! WRITE DATA TO CSV FILES! ###########
-        if not self.data_written:
-            print("\n\nWe have finished recording, writing to csv files now!\n\n")
+        if self.finished_ring and not self.data_written:
             # we have finished recording points, write to csv file now
             if self.write_data:
+                print("\n\nWe have finished recording, writing to csv files now!\n\n")
                 self.write_to_csv()
                 self.data_written = True
 
