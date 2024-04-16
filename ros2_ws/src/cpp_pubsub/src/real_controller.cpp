@@ -114,8 +114,8 @@ public:
   // step 5: move the robot back to self-defined home position
 
   // times for each step
-  const int prep_time = 5;
-  const int require_initial_vals_time = 3;
+  const int prep_time = 4;
+  const int require_initial_vals_time = 2;
   const int smoothing_time = 5;
   const int float_time = 2;     // time to float at starting position
   const int shifting_time = 2;
@@ -331,8 +331,8 @@ private:
         }
         // ((((((((( case 1.2: robot done, human is still lacking ))))))))) -> do nothing to the robot_offset vector
         // std::cout << "ax = " << ax << " ay = " << ay << " az = " << az << std::endl;
-        std::cout << "R = (" << robot_offset.at(0) << ", " << robot_offset.at(1) << ", " << robot_offset.at(2) << ") !!!";
-        std::cout << "H = (" << human_offset.at(0) << ", " << human_offset.at(1) << ", " << human_offset.at(2) << ") !!!" << std::endl;
+        // std::cout << "R = (" << robot_offset.at(0) << ", " << robot_offset.at(1) << ", " << robot_offset.at(2) << ") !!!";
+        // std::cout << "H = (" << human_offset.at(0) << ", " << human_offset.at(1) << ", " << human_offset.at(2) << ") !!!" << std::endl;
         tcp_pos.at(0) = origin.at(0) + ax * human_offset.at(0) + (1-ax) * robot_offset.at(0);
         tcp_pos.at(1) = origin.at(1) + ay * human_offset.at(1) + (1-ay) * robot_offset.at(1);
         tcp_pos.at(2) = origin.at(2) + az * human_offset.at(2) + (1-az) * robot_offset.at(2);

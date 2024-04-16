@@ -57,15 +57,6 @@ class MarkerPublisher : public rclcpp::Node
     double r_radius = 0.0;
     double w_target = 0.0;
 
-    // SAME INITIAL TIMING AS THE CONTROLLER
-    const int control_freq = 500;   // [Hz]
-
-    const int prep_time = 5;        // [seconds]
-    const int max_prep_count = control_freq * prep_time;
-
-    const int smoothing_time = 5;   // [seconds]
-    const int max_smoothing_count = control_freq * smoothing_time;
-
     // count (incoming from the controller file)
     int count = 0;    // {5 during prep}, {5,4,3,2,1,0 during smoothing}, {10 when ring finished}
     std::vector<double> countdown_center {0.3, 0.0, 0.05};
@@ -271,16 +262,16 @@ void generate_tcp_marker(visualization_msgs::msg::Marker &tcp_marker)
   tcp_marker.type = visualization_msgs::msg::Marker::SPHERE;
 
   // diameters of the sphere in x, y, z directions [cm]
-  tcp_marker.scale.x = 0.015;
-  tcp_marker.scale.y = 0.015;
-  tcp_marker.scale.z = 0.015;
+  tcp_marker.scale.x = 0.005;
+  tcp_marker.scale.y = 0.005;
+  tcp_marker.scale.z = 0.005;
 
   // sphere is red
   tcp_marker.color.r = 1.0;
   tcp_marker.color.a = 1.0;
   
   // zero offset from the panda tcp link frame
-  tcp_marker.pose.position.x = 0.0;
+  tcp_marker.pose.position.x = 0.02;    // push the marker forwards by 1cm
   tcp_marker.pose.position.y = 0.0;
   tcp_marker.pose.position.z = 0.0;
 }
