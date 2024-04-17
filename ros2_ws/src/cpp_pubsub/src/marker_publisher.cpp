@@ -58,7 +58,7 @@ class MarkerPublisher : public rclcpp::Node
     double w_target = 0.0;
 
     // count (incoming from the controller file)
-    int count = 0;    // {5 during prep}, {5,4,3,2,1,0 during smoothing}, {10 when ring finished}
+    int count = 6;    // {5 during prep}, {5,4,3,2,1,0 during smoothing}, {10 when ring finished}
     std::vector<double> countdown_center {0.3, 0.0, 0.05};
 
 
@@ -296,6 +296,7 @@ visualization_msgs::msg::Marker generate_countdown(int count, std::vector<double
 
   // set text color and opacity
   switch (count) {
+    case 6: text.color.r = 1.0; break;
     case 5: text.color.r = 1.0; break;
     case 4: text.color.r = 1.0; break;
     case 3: text.color.r = 1.0; break;
@@ -307,6 +308,9 @@ visualization_msgs::msg::Marker generate_countdown(int count, std::vector<double
 
   text.text = std::to_string(count);
 
+  if (count == 6) {
+    text.text = "Wait!";
+  }
   if (count == 0) {
     text.text = "Go!";
   }

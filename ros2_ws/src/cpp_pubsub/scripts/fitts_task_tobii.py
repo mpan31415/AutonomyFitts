@@ -22,8 +22,6 @@ ORIGIN = [0.5059, 0.0, 0.4346]   # this is in [meters]
 
 ALL_CSV_DIR = "/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/data_logging/csv_logs/"
 
-LOG_DATA = True
-
 
 ### Fitts rings' parameters
 FITTS_DICT_LIST = [
@@ -45,22 +43,24 @@ class FittsTask(Node):
         super().__init__('fitts_task')
 
         # parameter stuff
-        self.param_names = ['free_drive', 'mapping_ratio', 'use_tobii', 'part_id', 'alpha_id', 'ring_id']
+        self.param_names = ['free_drive', 'mapping_ratio', 'use_tobii', 'log_data', 'part_id', 'alpha_id', 'ring_id']
         self.declare_parameters(
             namespace='',
             parameters=[
-                (self.param_names[0], 0),
-                (self.param_names[1], 3.0),
-                (self.param_names[2], 0),
-                (self.param_names[3], 0),
-                (self.param_names[4], 0),
-                (self.param_names[5], 0)
+                (self.param_names[0], 0),      # free drive
+                (self.param_names[1], 3.0),    # mapping ratio
+                (self.param_names[2], 0),      # use_tobii
+                (self.param_names[3], 0),      # log_data
+                (self.param_names[4], 0),      # part_id
+                (self.param_names[5], 0),      # alpha_id
+                (self.param_names[6], 0)       # ring_id
             ]
         )
-        (free_drive_param, mapping_ratio_param, use_tobii_param, part_param, alpha_param, ring_param) = self.get_parameters(self.param_names)
+        (free_drive_param, mapping_ratio_param, use_tobii_param, log_data_param, part_param, alpha_param, ring_param) = self.get_parameters(self.param_names)
         self.free_drive = free_drive_param.value
         self.mapping_ratio = mapping_ratio_param.value
         self.use_tobii = use_tobii_param.value
+        self.log_data = log_data_param.value
         self.part_id = part_param.value
         self.alpha_id = alpha_param.value
         self.ring_id = ring_param.value   # in range [1, 4]
@@ -112,7 +112,7 @@ class FittsTask(Node):
         self.finished_ring = False
 
         ####### data logging storage #######
-        self.write_data = LOG_DATA
+        self.write_data = self.log_data
         self.record = False
         self.data_written = False
 
@@ -398,6 +398,7 @@ class FittsTask(Node):
         print("The free_drive flag = %d\n\n" % self.free_drive)
         print("The mapping_ratio = %d\n\n" % self.mapping_ratio)
         print("The use_tobii = %d\n\n" % self.use_tobii)
+        print("The log_data = %d\n\n" % self.log_data)
         print("The participant_id = %d\n\n" % self.part_id)
         print("The alpha_id = %d\n\n" % self.alpha_id)
         print("The ring_id = %d\n\n" % self.ring_id)

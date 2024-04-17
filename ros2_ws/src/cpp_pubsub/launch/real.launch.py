@@ -31,6 +31,7 @@ def generate_launch_description():
     free_drive_parameter_name = 'free_drive'
     mapping_ratio_parameter_name = 'mapping_ratio'
     use_tobii_parameter_name = 'use_tobii'
+    log_data_parameter_name = 'log_data'
     participant_parameter_name = 'part_id'
     alpha_parameter_name = 'alpha_id'
     ring_parameter_name = 'ring_id'
@@ -38,6 +39,7 @@ def generate_launch_description():
     free_drive = LaunchConfiguration(free_drive_parameter_name)
     mapping_ratio = LaunchConfiguration(mapping_ratio_parameter_name)
     use_tobii = LaunchConfiguration(use_tobii_parameter_name)
+    log_data = LaunchConfiguration(log_data_parameter_name)
     participant = LaunchConfiguration(participant_parameter_name)
     alpha = LaunchConfiguration(alpha_parameter_name)
     ring = LaunchConfiguration(ring_parameter_name)
@@ -107,6 +109,10 @@ def generate_launch_description():
             use_tobii_parameter_name,
             default_value=my_use_tobii,  
             description='Use Tobii parameter'),
+        DeclareLaunchArgument(
+            log_data_parameter_name,
+            default_value=my_log_data,  
+            description='Log data parameter'),
         DeclareLaunchArgument(
             participant_parameter_name,
             default_value=my_part_id,  
@@ -186,6 +192,7 @@ def generate_launch_description():
                 {free_drive_parameter_name: free_drive},
                 {mapping_ratio_parameter_name: mapping_ratio},
                 {use_tobii_parameter_name: use_tobii},
+                {log_data_parameter_name: log_data},
                 {participant_parameter_name: participant},
                 {alpha_parameter_name: alpha},
                 {ring_parameter_name: ring}
