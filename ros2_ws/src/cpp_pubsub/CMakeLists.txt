@@ -87,8 +87,9 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
 
-  scripts/traj_recorder.py
+  # scripts/traj_recorder.py
   scripts/fitts_task.py
+  scripts/fitts_task_tobii.py
 
   DESTINATION lib/${PROJECT_NAME}
 )

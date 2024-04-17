@@ -279,7 +279,7 @@ class FittsTask(Node):
         print("\n" * 10)
         print("=" * 100)
 
-        print("\n\nThe current parameters [traj_recorder] are as follows:\n")
+        print("\n\nThe current parameters [fitts_task] are as follows:\n")
         print("The free_drive flag = %d\n\n" % self.free_drive)
         print("The mapping_ratio = %d\n\n" % self.mapping_ratio)
         print("The participant_id = %d\n\n" % self.part_id)

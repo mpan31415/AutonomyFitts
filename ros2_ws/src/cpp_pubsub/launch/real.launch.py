@@ -27,12 +27,14 @@ def generate_launch_description():
     ###### my own launch arguments ######
     free_drive_parameter_name = 'free_drive'
     mapping_ratio_parameter_name = 'mapping_ratio'
+    use_tobii_parameter_name = 'use_tobii'
     participant_parameter_name = 'part_id'
     alpha_parameter_name = 'alpha_id'
     ring_parameter_name = 'ring_id'
 
     free_drive = LaunchConfiguration(free_drive_parameter_name)
     mapping_ratio = LaunchConfiguration(mapping_ratio_parameter_name)
+    use_tobii = LaunchConfiguration(use_tobii_parameter_name)
     participant = LaunchConfiguration(participant_parameter_name)
     alpha = LaunchConfiguration(alpha_parameter_name)
     ring = LaunchConfiguration(ring_parameter_name)
@@ -95,6 +97,10 @@ def generate_launch_description():
             mapping_ratio_parameter_name,
             default_value=my_mapping_ratio,  
             description='Mapping ratio parameter'),
+        DeclareLaunchArgument(
+            use_tobii_parameter_name,
+            default_value=my_use_tobii,  
+            description='Use Tobii parameter'),
         DeclareLaunchArgument(
             participant_parameter_name,
             default_value=my_part_id,  
@@ -159,6 +165,22 @@ def generate_launch_description():
             name='position_talker'
         ),
 
+        # Fitts task WITH TOBII node
+        Node(
+            package='cpp_pubsub',
+            executable='fitts_task_tobii.py',
+            parameters=[
+                {free_drive_parameter_name: free_drive},
+                {mapping_ratio_parameter_name: mapping_ratio},
+                {use_tobii_parameter_name: use_tobii},
+                {participant_parameter_name: participant},
+                {alpha_parameter_name: alpha},
+                {ring_parameter_name: ring}
+            ],
+            output='screen',
+            emulate_tty=True
+        ),
+
         # marker publisher node
         Node(
             package='cpp_pubsub',
@@ -171,20 +193,20 @@ def generate_launch_description():
             name='marker_publisher'
         ),
 
-        # Fitts task node
-        Node(
-            package='cpp_pubsub',
-            executable='fitts_task.py',
-            parameters=[
-                {free_drive_parameter_name: free_drive},
-                {mapping_ratio_parameter_name: mapping_ratio},
-                {participant_parameter_name: participant},
-                {alpha_parameter_name: alpha},
-                {ring_parameter_name: ring}
-            ],
-            output='screen',
-            emulate_tty=True
-        ),
+        # # Fitts task node
+        # Node(
+        #     package='cpp_pubsub',
+        #     executable='fitts_task.py',
+        #     parameters=[
+        #         {free_drive_parameter_name: free_drive},
+        #         {mapping_ratio_parameter_name: mapping_ratio},
+        #         {participant_parameter_name: participant},
+        #         {alpha_parameter_name: alpha},
+        #         {ring_parameter_name: ring}
+        #     ],
+        #     output='screen',
+        #     emulate_tty=True
+        # ),
 
         # # trajectory recorder node
         # Node(

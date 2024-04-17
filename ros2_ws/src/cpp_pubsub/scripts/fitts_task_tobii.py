@@ -15,7 +15,7 @@ from time import time
 
 import tobii_research as tr
 import matplotlib.pyplot as plt
-from pupil_utils import clean_up_list, lhipa
+from cpp_pubsub.pupil_utils import clean_up_list, lhipa
 
 
 ORIGIN = [0.5059, 0.0, 0.4346]   # this is in [meters]
@@ -45,7 +45,7 @@ class FittsTask(Node):
         super().__init__('fitts_task')
 
         # parameter stuff
-        self.param_names = ['free_drive', 'mapping_ratio', 'part_id', 'alpha_id', 'ring_id']
+        self.param_names = ['free_drive', 'mapping_ratio', 'use_tobii', 'part_id', 'alpha_id', 'ring_id']
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -53,21 +53,24 @@ class FittsTask(Node):
                 (self.param_names[1], 3.0),
                 (self.param_names[2], 0),
                 (self.param_names[3], 0),
-                (self.param_names[4], 0)
+                (self.param_names[4], 0),
+                (self.param_names[5], 0)
             ]
         )
-        (free_drive_param, mapping_ratio_param, part_param, alpha_param, ring_param) = self.get_parameters(self.param_names)
+        (free_drive_param, mapping_ratio_param, use_tobii_param, part_param, alpha_param, ring_param) = self.get_parameters(self.param_names)
         self.free_drive = free_drive_param.value
         self.mapping_ratio = mapping_ratio_param.value
+        self.use_tobii = use_tobii_param.value
         self.part_id = part_param.value
         self.alpha_id = alpha_param.value
         self.ring_id = ring_param.value   # in range [1, 4]
 
         self.print_params()
         
-        # Tobii eye-tracker connection
-        self.initialize_tobii()
-        
+        if self.use_tobii:
+            # Tobii eye-tracker connection
+            self.initialize_tobii()
+            
         # Left and right pupil sizes storages
         self.left_pupil_sizes = []
         self.right_pupil_sizes = []
@@ -267,7 +270,7 @@ class FittsTask(Node):
                 self.publish_ring_finished(False)
             # target selected
             else:
-                # finished entire ring, do not advance to next target
+                # finished entire ring, do not advance to next target, proceed to log data
                 if self.curr_target_number == N_TARGETS-1:
                     self.finished_ring = True   
                     self.publish_ring_finished(True)
@@ -279,7 +282,7 @@ class FittsTask(Node):
                     # get final timestamp
                     self.end_timestamp = time()
                 else:
-                    # advanced to next target
+                    # advance to next target
                     self.curr_target_number += 1
                     self.curr_target_id = TARGET_ORDER_LIST[self.curr_target_number]
                     print("Target selected, setting next target = %d" % self.curr_target_id)
@@ -325,7 +328,11 @@ class FittsTask(Node):
         if self.finished_ring and self.write_data and not self.data_written:
             # we have finished recording points, write to csv file now
             print("\n\nWe have finished recording, writing to csv files now!\n\n")
-            self.process_pupil_data()
+            # assign dummy values to give to DataLogger if not using Tobii
+            if self.use_tobii:
+                self.process_pupil_data()
+            else:
+                self.assign_dummy_pupil_data()
             self.write_to_csv()
             self.data_written = True
             self.plot_pupil_diameters()
@@ -333,16 +340,39 @@ class FittsTask(Node):
     
     ##############################################################################
     def process_pupil_data(self):
+
         # clean up pupil size lists
         left_cleaned, percent_left_nan = clean_up_list(self.left_pupil_sizes)
         right_cleaned, percent_right_nan = clean_up_list(self.right_pupil_sizes)
         print("\nPercentage of NAN values = (%.3f, %.3f)\n" % (percent_left_nan, percent_right_nan))
         # compute indexes using lhipa
-        self.left_pupil_index = lhipa(left_cleaned)
-        self.right_pupil_index = lhipa(right_cleaned)
+        duration = self.end_timestamp - self.start_timestamp
+        print("\nTrial duration = %.3f seconds!\n" % duration)
+
+        # compute LHIPA indexes, recalculating if yielding 0 the first time
+        self.left_pupil_index = lhipa(left_cleaned, duration, recalculate=False)
+        if self.left_pupil_index == 0.0:
+            self.left_pupil_index = lhipa(left_cleaned, duration, recalculate=True)
+
+        self.right_pupil_index = lhipa(right_cleaned, duration, recalculate=False)
+        if self.right_pupil_index == 0.0:
+            self.right_pupil_index = lhipa(right_cleaned, duration, recalculate=True)
+
+        # compute average LHIPA index
         self.ave_pupil_index = (self.left_pupil_index + self.right_pupil_index) / 2
+
         print("\nFinished processing pupil data!!!\n")
+
     
+    ##############################################################################
+    def assign_dummy_pupil_data(self):
+        self.left_pupil_index = 0.0
+        self.right_pupil_index = 0.0
+        self.ave_pupil_index = 0.0
+        self.left_pupil_sizes.append(0.0)
+        self.right_pupil_sizes.append(0.0)
+        print("\nFinished assigning dummy pupil data!\n")
+
 
     ##############################################################################
     def write_to_csv(self):
@@ -363,9 +393,10 @@ class FittsTask(Node):
         print("\n" * 10)
         print("=" * 100)
 
-        print("\n\nThe current parameters [traj_recorder] are as follows:\n")
+        print("\n\nThe current parameters [fitts_task_tobii] are as follows:\n")
         print("The free_drive flag = %d\n\n" % self.free_drive)
         print("The mapping_ratio = %d\n\n" % self.mapping_ratio)
+        print("The use_tobii = %d\n\n" % self.use_tobii)
         print("The participant_id = %d\n\n" % self.part_id)
         print("The alpha_id = %d\n\n" % self.alpha_id)
         print("The ring_id = %d\n\n" % self.ring_id)
