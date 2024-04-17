@@ -7,6 +7,9 @@ from launch_ros.substitutions import FindPackageShare
 
 from cpp_pubsub.exp_params import *
 
+import os
+from ament_index_python.packages import get_package_share_directory
+
 
 def generate_launch_description():
 
@@ -39,6 +42,9 @@ def generate_launch_description():
     alpha = LaunchConfiguration(alpha_parameter_name)
     ring = LaunchConfiguration(ring_parameter_name)
 
+    rviz_file = os.path.join(get_package_share_directory('franka_description'), 'rviz',
+                             'autonomy_fitts.rviz')
+
 
     return LaunchDescription([
         
@@ -49,7 +55,7 @@ def generate_launch_description():
             description='Hostname or IP address of the robot.'),
         DeclareLaunchArgument(
             use_rviz_parameter_name,
-            default_value='true',                       ### this was originally false
+            default_value='false',                       ### we are using RViz, just not launching through franka.launch.py (franka_bringup)
             description='Visualize the robot in Rviz'),
         DeclareLaunchArgument(
             use_fake_hardware_parameter_name,
@@ -129,6 +135,13 @@ def generate_launch_description():
 
 
         ############################## THE FOLLOWING ARE MY OWN STUFF ##############################
+
+        # launch Rviz2 with my custom config
+        Node(package='rviz2',
+             executable='rviz2',
+             name='rviz2',
+             arguments=['--display-config', rviz_file],
+             ),
 
         # joint trajectory controller
         # Node(

@@ -335,7 +335,8 @@ class FittsTask(Node):
                 self.assign_dummy_pupil_data()
             self.write_to_csv()
             self.data_written = True
-            self.plot_pupil_diameters()
+            if self.use_tobii:
+                self.plot_pupil_diameters()
 
     
     ##############################################################################
