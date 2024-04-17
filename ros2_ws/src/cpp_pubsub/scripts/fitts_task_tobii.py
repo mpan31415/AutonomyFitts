@@ -346,6 +346,12 @@ class FittsTask(Node):
         left_cleaned, percent_left_nan = clean_up_list(self.left_pupil_sizes)
         right_cleaned, percent_right_nan = clean_up_list(self.right_pupil_sizes)
         print("\nPercentage of NAN values = (%.3f, %.3f)\n" % (percent_left_nan, percent_right_nan))
+        
+        # compute left and right average diameters
+        self.left_ave_size = sum(left_cleaned) / len(left_cleaned)
+        self.right_ave_size = sum(right_cleaned) / len(right_cleaned)
+        self.ave_size = (self.left_ave_size + self.right_ave_size) / 2
+        
         # compute indexes using lhipa
         duration = self.end_timestamp - self.start_timestamp
         print("\nTrial duration = %.3f seconds!\n" % duration)
@@ -367,6 +373,9 @@ class FittsTask(Node):
     
     ##############################################################################
     def assign_dummy_pupil_data(self):
+        self.left_ave_size = 0.0
+        self.right_ave_size = 0.0
+        self.ave_size = 0.0
         self.left_pupil_index = 0.0
         self.right_pupil_index = 0.0
         self.ave_pupil_index = 0.0
@@ -380,7 +389,8 @@ class FittsTask(Node):
 
         dl = DataLogger(self.csv_dir, self.part_id, self.alpha_id, self.ring_id, self.hys, self.hzs, self.rys, self.rzs, self.tys, self.tzs, 
                         self.refys, self.refzs, self.target_ids, self.times_from_start, self.times, self.datetimes, self.move_times,
-                        self.ave_pupil_index, self.left_pupil_index, self.right_pupil_index, self.left_pupil_sizes, self.right_pupil_sizes)
+                        self.ave_pupil_index, self.left_pupil_index, self.right_pupil_index, self.ave_size, self.left_ave_size, self.right_ave_size,
+                        self.left_pupil_sizes, self.right_pupil_sizes)
 
         dl.calculate()
 

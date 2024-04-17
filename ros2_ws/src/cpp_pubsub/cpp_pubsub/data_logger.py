@@ -8,7 +8,8 @@ class DataLogger:
 
     def __init__(self, csv_dir, part_id, alpha_id, ring_id, hys, hzs, rys, rzs, tys, tzs, 
                  refys, refzs, target_ids, times_from_start, times, datetimes, move_times,
-                 ave_pupil, left_pupil, right_pupil, left_sizes, right_sizes):
+                 ave_pupil_index, left_pupil_index, right_pupil_index, 
+                 ave_size, left_ave_size, right_ave_size, left_pupil_sizes, right_pupil_sizes):
         
         # trial info
         self.csv_dir = csv_dir
@@ -40,17 +41,22 @@ class DataLogger:
         self.times = times
         self.datetimes = datetimes
         
-        # pupil diameter
-        self.ave_pupil = ave_pupil
-        self.left_pupil = left_pupil
-        self.right_pupil = right_pupil
-        self.left_sizes = left_sizes
-        self.right_sizes = right_sizes
+        # pupil diameter stuff
+        self.ave_pupil_index = ave_pupil_index
+        self.left_pupil_index = left_pupil_index
+        self.right_pupil_index = right_pupil_index
+        
+        self.ave_size = ave_size
+        self.left_ave_size = left_ave_size
+        self.right_ave_size = right_ave_size
+        
+        self.left_pupil_sizes = left_pupil_sizes
+        self.right_pupil_sizes = right_pupil_sizes
 
         # csv column names
         self.header_file_name = self.csv_dir + "part" + str(self.part_id) + "_header.csv"
-        self.header_field_names = ['trial_number', 'alpha_id', 'ring_id', 'average_mt', 'ave_pupil', 'left_pupil', 'right_pupil', 
-                                   'mt_list', 'left_sizes', 'right_sizes']
+        self.header_field_names = ['trial_number', 'alpha_id', 'ring_id', 'average_mt', 'ave_pupil_index', 'left_pupil_index', 'right_pupil_index', 
+                                   'ave_size', 'left_ave_size', 'right_ave_size', 'mt_list', 'left_pupil_sizes', 'right_pupil_sizes']
 
         self.log_field_names = ['target_id', 'h_err', 'r_err', 't_err', 'hy_err', 'hz_err', 'ry_err', 'rz_err', 'ty_err', 'tz_err',
                                 'refy', 'refz', 'hy', 'hz', 'ry', 'rz', 'ty', 'tz', 'times_from_start', 'times', 'datetimes']
@@ -110,12 +116,15 @@ class DataLogger:
                               self.header_field_names[1]: self.alpha_id,
                               self.header_field_names[2]: self.ring_id,
                               self.header_field_names[3]: self.ave_move_time,
-                              self.header_field_names[4]: self.ave_pupil,
-                              self.header_field_names[5]: self.left_pupil,
-                              self.header_field_names[6]: self.right_pupil,
-                              self.header_field_names[7]: self.move_times,
-                              self.header_field_names[8]: self.left_sizes,
-                              self.header_field_names[9]: self.right_sizes
+                              self.header_field_names[4]: self.ave_pupil_index,
+                              self.header_field_names[5]: self.left_pupil_index,
+                              self.header_field_names[6]: self.right_pupil_index,
+                              self.header_field_names[7]: self.ave_size,
+                              self.header_field_names[8]: self.left_ave_size,
+                              self.header_field_names[9]: self.right_ave_size,
+                              self.header_field_names[10]: self.move_times,
+                              self.header_field_names[11]: self.left_pupil_sizes,
+                              self.header_field_names[12]: self.right_pupil_sizes
             }
 
             writer = DictWriter(f, fieldnames=self.header_field_names)
@@ -164,17 +173,6 @@ class DataLogger:
                                   self.log_field_names[20]: self.datetimes[i]
                 }
                 writer.writerow(new_data_point)
-
-                # wr.writerow([self.target_ids[i], self.refys[i], self.refzs[i], ])
-                
-                    # wr.writerow([self.refxs[i], self.refys[i], self.refzs[i],       # this was added (for noisy robot), and a few below also
-                    #             self.hxs[i], self.hys[i], self.hzs[i], self.rxs[i], self.rys[i], self.rzs[i],
-                    #             self.txs[i], self.tys[i], self.tzs[i], self.h_err_list[i], self.h_err_list, self.t_err_list[i],
-                    #             self.hx_err_list[i], self.hy_err_list[i], self.hz_err_list[i],
-                    #             self.rx_err_list[i], self.ry_err_list[i], self.rz_err_list[i],
-                    #             self.tx_err_list[i], self.ty_err_list[i], self.tz_err_list[i],
-                    #             self.times_from_start[i], self.times[i], self.datetimes[i]])
-
 
             print("\nSuccesfully opened file %s and finished logging data !!!\n" % self.data_file_name)
 
