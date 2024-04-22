@@ -17,6 +17,8 @@ import tobii_research as tr
 import matplotlib.pyplot as plt
 from cpp_pubsub.pupil_utils import clean_up_list, lhipa
 
+from playsound import playsound
+
 
 ORIGIN = [0.5059, 0.0, 0.4346]   # this is in [meters]
 
@@ -95,6 +97,10 @@ class FittsTask(Node):
         self.record_flag_sub = self.create_subscription(Bool, 'record', self.record_flag_callback, 10)
         self.record_flag_sub  # prevent unused variable warning
 
+        # countdown subscriber
+        self.countdown_sub = self.create_subscription(Int16, 'countdown', self.countdown_callback, 10)
+        self.countdown_sub  # prevent unused variable warning
+
         # file name of the csv sheet
         self.csv_dir = ALL_CSV_DIR + "part" + str(self.part_id) + "/"
 
@@ -110,6 +116,8 @@ class FittsTask(Node):
         self.tcp_z = ORIGIN[2]
 
         self.finished_ring = False
+
+        self.countdown = 100
 
         ####### data logging storage #######
         self.write_data = self.log_data
@@ -202,6 +210,19 @@ class FittsTask(Node):
     ##############################################################################
     def record_flag_callback(self, msg):
         self.record = msg.data
+
+    
+    ##############################################################################
+    def countdown_callback(self, msg):
+        countdown = msg.data
+        if countdown < 4 and self.countdown != countdown:
+            self.countdown == countdown
+            if countdown == 0:
+                # print("\n\n\nPlaying GO GOGOGOGOGOGOGOGO sound!\n\n\n")
+                playsound("/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/scripts/sounds/higher_beep.wav")
+            else:
+                # print("\n\n\nPlaying countdown sound!\n\n\n")
+                playsound("/home/michael/AutonomyFitts/ros2_ws/src/cpp_pubsub/scripts/sounds/lower_beep.wav")
 
 
     ##############################################################################
@@ -335,8 +356,8 @@ class FittsTask(Node):
                 self.assign_dummy_pupil_data()
             self.write_to_csv()
             self.data_written = True
-            if self.use_tobii:
-                self.plot_pupil_diameters()
+            # if self.use_tobii:
+            #     self.plot_pupil_diameters()
 
     
     ##############################################################################
