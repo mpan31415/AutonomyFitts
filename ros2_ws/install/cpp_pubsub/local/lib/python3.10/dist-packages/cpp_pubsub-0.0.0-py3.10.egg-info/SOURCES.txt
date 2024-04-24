@@ -4,6 +4,7 @@ cpp_pubsub/data_logger.py
 cpp_pubsub/exp_params.py
 cpp_pubsub/module_to_import.py
 cpp_pubsub/pupil_utils.py
+cpp_pubsub/traj_utils.py
 cpp_pubsub.egg-info/PKG-INFO
 cpp_pubsub.egg-info/SOURCES.txt
 cpp_pubsub.egg-info/dependency_links.txt
