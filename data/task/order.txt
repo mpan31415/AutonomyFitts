@@ -1,0 +1,7 @@
+####################
+
+==> Make sure to change the "NUM_PARTICIPANTS" variable to be correct
+
+step 1: run get_all_times.py
+
+step 2: run join_all_parts.py
