@@ -238,6 +238,18 @@ interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.
 interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
 
 
+###### fit linear mixed model 2 ######
+fit <- lm(single_trust ~ fitts_id_num * auto_level, data = task_df)
+summary(fit)
+
+interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              # plot.points = TRUE,
+              x.label="Fitts ID", y.label="Single-Scale Trust", 
+              modx.labels = c("low", "med", "high")
+              )
+
+
 ```
 
 

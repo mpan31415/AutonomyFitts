@@ -1,0 +1,255 @@
+---
+title: "move_times"
+output: html_document
+date: "2024-04-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analysis script for "
+
+```{r load libraries}
+library(readr)
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(stats)
+library(lme4)
+library(dplyr)
+library(ez)
+library(ltm)
+library(interactions)
+```
+
+
+## Extract dataframe from csv file and get (mean, sd) or (mean, se) summary
+
+```{r read csv}
+
+setwd("C:/Users/micha/OneDrive/My_GitHub_Repos/AutonomyFitts/data/")
+task_df <- read_csv("all_data.csv")
+
+auto_levels_order <- c("low_auto", "med_auto", "high_auto")  # Replace these with your actual level names
+
+# Reorder the factor levels of "auto_level" according to levels_order
+task_df$auto_level <- factor(task_df$auto_level, levels = auto_levels_order)
+
+
+######################### get mean and sd (or se) ######################### 
+task_df %>%
+  group_by(auto_level, ring_id) %>%
+  get_summary_stats(mdmt_ave, type = "mean_sd")
+
+
+
+```
+
+## Plots
+
+```{r do plotting}
+
+# ######################### cool box plot (courtesy of Sarah) #########################
+# ggplot(task_df,aes(x=order,y=time, fill=order))+geom_boxplot(aes(fill=order)) + labs( x = "Order", y = "time", fill = "Order") +   theme_minimal() +
+# # stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
+# scale_fill_brewer(palette = "Set2") +
+#     theme(plot.title = element_text(size = 15, face = "bold"),
+#         axis.title.x = element_text(size = 14, face = "bold"),
+#         axis.title.y = element_text(size = 14, face = "bold"),
+# axis.text = element_text(size = 16),
+#         legend.title = element_text(size = 12),
+#         legend.text = element_text(size = 11),
+#         legend.position= "none") +
+#   facet_grid(. ~ autonomy) +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1),
+#         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
+
+# ######################### cool box plot (courtesy of Sarah) #########################
+# ggplot(task_df,aes(x=auto_level,y=mdmt_ave, fill=auto_level))+geom_boxplot(aes(fill=auto_level)) + labs( x = "auto_level", y = "mdmt_ave", fill = "auto_level") +   theme_minimal() +
+# stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
+# scale_fill_brewer(palette = "Set2") +
+#     theme(plot.title = element_text(size = 15, face = "bold"),
+#         axis.title.x = element_text(size = 14, face = "bold"),
+#         axis.title.y = element_text(size = 14, face = "bold"),
+# axis.text = element_text(size = 16),
+#         legend.title = element_text(size = 12),
+#         legend.text = element_text(size = 11),
+#         legend.position= "none") +
+#   facet_grid(. ~ ring_id) +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1),
+#         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
+
+# 
+# 
+# ######################### cool dot plot #########################
+# ggplot(task_df,aes(x=order,y=time, fill=order)) + geom_boxplot() + geom_dotplot(binaxis='y', stackdir='center', stackratio=1.5, dotsize=1.2) +
+#                     labs( x = "Order", y = "time", fill = "Order") + theme_minimal() +
+# # stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
+# scale_fill_brewer(palette = "Set2") +
+#     theme(plot.title = element_text(size = 15, face = "bold"),
+#         axis.title.x = element_text(size = 14, face = "bold"),
+#         axis.title.y = element_text(size = 14, face = "bold"),
+#         axis.text = element_text(size = 16),
+#         legend.title = element_text(size = 12),
+#         legend.text = element_text(size = 11),
+#         legend.position= "none") +
+#   facet_grid(. ~ autonomy) +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1),
+#         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
+
+
+# ## define custom median function
+# plot.median <- function(x) {
+#   m <- median(x)
+#   c(y = m, ymin = m, ymax = m)
+# }
+# 
+# ## define custom mean function
+# plot.median <- function(x) {
+#   m <- mean(x)
+#   c(y = m, ymin = m, ymax = m)
+# }
+# 
+# ######################### cool dot plot 2 ######################### 
+# p <- ggplot(task_df,aes(x=order,y=time, fill=order)) + geom_dotplot(binaxis='y', stackdir='center', stackratio=1.5, dotsize=0.6) + 
+#                     labs( x = "Order", y = "NASA-TLX", fill = "Order") + theme_minimal() +
+# stat_summary(fun.y = mean, geom="crossbar", colour="red", width=0.5, size=0.5) +
+# scale_fill_brewer(palette = "Set2") +
+#     theme(plot.title = element_text(size = 15, face = "bold"),
+#         axis.title.x = element_text(size = 18, face = "bold"),
+#         axis.title.y = element_text(size = 18, face = "bold"),
+#         axis.text = element_text(size = 18),
+#         legend.title = element_text(size = 12),
+#         legend.text = element_text(size = 11),
+#         legend.position= "none") +
+#   facet_grid(. ~ autonomy, ) +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1),
+#         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 18), legend.position = "none")
+# 
+# p
+# 
+# ggexport(p, filename = "pdfs/tlx.pdf")
+
+# bxp <- ggboxplot(task_df, x = "condition", y = "time", add = "point")
+# bxp
+# # ggexport(bxp, filename = "tlx.png")
+# 
+# task_df %>%
+#   ggplot( aes(x=condition, y=time)) +
+#     geom_line() +
+#     geom_point()
+
+
+
+bxp <- ggboxplot(
+  task_df, x = "ring_id", y = "mdmt_ave",
+  color = "auto_level", palette = "jco"
+  )
+bxp
+
+```
+
+
+## Check assumptions
+
+```{r check assumptions}
+
+######################### check for outliers ######################### 
+task_df %>%
+  group_by(auto_level, ring_id) %>%
+  identify_outliers(mdmt_ave)
+
+######################### check normality ######################### 
+task_df %>%
+  group_by(auto_level, ring_id) %>%
+  shapiro_test(mdmt_ave)
+
+######################### plot normality ######################### 
+ggqqplot(task_df, "mdmt_ave", ggtheme = theme_bw()) +
+  facet_grid(ring_id ~ auto_level, labeller = "label_both")
+
+
+```
+
+
+## Fit Model
+
+```{r fit model}
+
+######################### Two-way mixed ANOVA test #########################  
+res.aov <- anova_test(
+  data = task_df, dv = mdmt_ave, wid = part_id,
+  within = c(auto_level, ring_id)
+  )
+get_anova_table(res.aov)
+
+
+#################### Effect of auto_level for each ring_id #################### 
+one.way <- task_df %>%
+  group_by(ring_id) %>%
+  anova_test(dv = mdmt_ave, wid = part_id, within = auto_level) %>%
+  get_anova_table() %>%
+  adjust_pvalue(method = "bonferroni")
+one.way
+
+#################### Effect of ring_id for each auto_level #################### 
+one.way <- task_df %>%
+  group_by(auto_level) %>%
+  anova_test(dv = mdmt_ave, wid = part_id, within = ring_id) %>%
+  get_anova_table() %>%
+  adjust_pvalue(method = "bonferroni")
+one.way
+
+
+#################### Pairwise comparisons between auto_level groups #################### 
+pwc <- task_df %>%
+  group_by(ring_id) %>%
+  pairwise_t_test(
+    mdmt_ave ~ auto_level, paired = TRUE,
+    p.adjust.method = "bonferroni"
+    )
+pwc
+
+#################### Pairwise comparisons between auto_level groups #################### 
+pwc <- task_df %>%
+  group_by(auto_level) %>%
+  pairwise_t_test(
+    mdmt_ave ~ ring_id, paired = TRUE,
+    p.adjust.method = "bonferroni"
+    )
+pwc
+
+```
+
+## Fit Linear Model
+
+```{r fit model}
+
+###### fit linear mixed model 1 ######
+model <- lmer(mdmt_ave ~ auto_num * fitts_id_num + (1 | part_id),
+              data = task_df)
+summary(model)
+
+interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.width = 0.8)
+# interact_plot(model, pred = fitts_id_num, modx = auto_num, plot.points = TRUE, interval = TRUE, int.width = 0.8)
+
+interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
+
+
+###### fit linear mixed model 2 ######
+fit <- lm(mdmt_ave ~ fitts_id_num * auto_level, data = task_df)
+summary(fit)
+
+interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              # plot.points = TRUE,
+              x.label="Fitts ID", y.label="Averaged MDMT", 
+              modx.labels = c("low", "med", "high")
+              )
+
+
+```
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

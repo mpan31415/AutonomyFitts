@@ -21,6 +21,7 @@ library(dplyr)
 library(ez)
 library(ltm)
 library(interactions)
+library(lmerTest)
 ```
 
 
@@ -40,7 +41,7 @@ task_df$auto_level <- factor(task_df$auto_level, levels = auto_levels_order)
 ######################### get mean and sd (or se) ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  get_summary_stats(per_auto, type = "mean_sd")
+  get_summary_stats(eff_auto_num, type = "mean_sd")
 
 
 
@@ -66,7 +67,7 @@ task_df %>%
 #         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
 
 # ######################### cool box plot (courtesy of Sarah) #########################
-# ggplot(task_df,aes(x=auto_level,y=per_auto, fill=auto_level))+geom_boxplot(aes(fill=auto_level)) + labs( x = "auto_level", y = "per_auto", fill = "auto_level") +   theme_minimal() +
+# ggplot(task_df,aes(x=auto_level,y=eff_auto_num, fill=auto_level))+geom_boxplot(aes(fill=auto_level)) + labs( x = "auto_level", y = "eff_auto_num", fill = "auto_level") +   theme_minimal() +
 # stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
 # scale_fill_brewer(palette = "Set2") +
 #     theme(plot.title = element_text(size = 15, face = "bold"),
@@ -143,7 +144,7 @@ task_df %>%
 
 
 bxp <- ggboxplot(
-  task_df, x = "ring_id", y = "per_auto",
+  task_df, x = "ring_id", y = "eff_auto_num",
   color = "auto_level", palette = "jco"
   )
 bxp
@@ -155,19 +156,19 @@ bxp
 
 ```{r check assumptions}
 
-######################### check for outliers ######################### 
-task_df %>%
-  group_by(auto_level, ring_id) %>%
-  identify_outliers(per_auto)
-
-######################### check normality ######################### 
-task_df %>%
-  group_by(auto_level, ring_id) %>%
-  shapiro_test(per_auto)
-
-######################### plot normality ######################### 
-ggqqplot(task_df, "per_auto", ggtheme = theme_bw()) +
-  facet_grid(ring_id ~ auto_level, labeller = "label_both")
+# ######################### check for outliers ######################### 
+# task_df %>%
+#   group_by(auto_level, ring_id) %>%
+#   identify_outliers(eff_auto_num)
+# 
+# ######################### check normality ######################### 
+# task_df %>%
+#   group_by(auto_level, ring_id) %>%
+#   shapiro_test(eff_auto_num)
+# 
+# ######################### plot normality ######################### 
+# ggqqplot(task_df, "eff_auto_num", ggtheme = theme_bw()) +
+#   facet_grid(ring_id ~ auto_level, labeller = "label_both")
 
 
 ```
@@ -179,7 +180,7 @@ ggqqplot(task_df, "per_auto", ggtheme = theme_bw()) +
 
 ######################### Two-way mixed ANOVA test #########################  
 res.aov <- anova_test(
-  data = task_df, dv = per_auto, wid = part_id,
+  data = task_df, dv = eff_auto_num, wid = part_id,
   within = c(auto_level, ring_id)
   )
 get_anova_table(res.aov)
@@ -188,25 +189,25 @@ get_anova_table(res.aov)
 #################### Effect of auto_level for each ring_id #################### 
 one.way <- task_df %>%
   group_by(ring_id) %>%
-  anova_test(dv = per_auto, wid = part_id, within = auto_level) %>%
+  anova_test(dv = eff_auto_num, wid = part_id, within = auto_level) %>%
   get_anova_table() %>%
   adjust_pvalue(method = "bonferroni")
 one.way
 
-#################### Effect of ring_id for each auto_level #################### 
-one.way <- task_df %>%
-  group_by(auto_level) %>%
-  anova_test(dv = per_auto, wid = part_id, within = ring_id) %>%
-  get_anova_table() %>%
-  adjust_pvalue(method = "bonferroni")
-one.way
+# #################### Effect of ring_id for each auto_level #################### 
+# one.way <- task_df %>%
+#   group_by(auto_level) %>%
+#   anova_test(dv = eff_auto_num, wid = part_id, within = ring_id) %>%
+#   get_anova_table() %>%
+#   adjust_pvalue(method = "bonferroni")
+# one.way
 
 
 #################### Pairwise comparisons between auto_level groups #################### 
 pwc <- task_df %>%
   group_by(ring_id) %>%
   pairwise_t_test(
-    per_auto ~ auto_level, paired = TRUE,
+    eff_auto_num ~ auto_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc
@@ -215,28 +216,10 @@ pwc
 pwc <- task_df %>%
   group_by(auto_level) %>%
   pairwise_t_test(
-    per_auto ~ ring_id, paired = TRUE,
+    eff_auto_num ~ ring_id, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc
-
-```
-
-
-## Fit Linear Model
-
-```{r fit model}
-
-###### fit linear mixed model 1 ######
-model <- lmer(per_auto ~ auto_num * fitts_id_num + (1 | part_id),
-              data = task_df)
-summary(model)
-
-interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.width = 0.8)
-# interact_plot(model, pred = fitts_id_num, modx = auto_num, plot.points = TRUE, interval = TRUE, int.width = 0.8)
-
-interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
-
 
 ```
 

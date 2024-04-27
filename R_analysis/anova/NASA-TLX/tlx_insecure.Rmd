@@ -40,7 +40,7 @@ task_df$auto_level <- factor(task_df$auto_level, levels = auto_levels_order)
 ######################### get mean and sd (or se) ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  get_summary_stats(ave_pupil_index, type = "mean_sd")
+  get_summary_stats(tlx_insecure, type = "mean_sd")
 
 
 
@@ -66,7 +66,7 @@ task_df %>%
 #         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
 
 # ######################### cool box plot (courtesy of Sarah) #########################
-# ggplot(task_df,aes(x=auto_level,y=ave_pupil_index, fill=auto_level))+geom_boxplot(aes(fill=auto_level)) + labs( x = "auto_level", y = "ave_pupil_index", fill = "auto_level") +   theme_minimal() +
+# ggplot(task_df,aes(x=auto_level,y=tlx_insecure, fill=auto_level))+geom_boxplot(aes(fill=auto_level)) + labs( x = "auto_level", y = "tlx_insecure", fill = "auto_level") +   theme_minimal() +
 # stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
 # scale_fill_brewer(palette = "Set2") +
 #     theme(plot.title = element_text(size = 15, face = "bold"),
@@ -143,7 +143,7 @@ task_df %>%
 
 
 bxp <- ggboxplot(
-  task_df, x = "ring_id", y = "ave_pupil_index",
+  task_df, x = "ring_id", y = "tlx_insecure",
   color = "auto_level", palette = "jco"
   )
 bxp
@@ -158,15 +158,15 @@ bxp
 ######################### check for outliers ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  identify_outliers(ave_pupil_index)
+  identify_outliers(tlx_insecure)
 
 ######################### check normality ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  shapiro_test(ave_pupil_index)
+  shapiro_test(tlx_insecure)
 
 ######################### plot normality ######################### 
-ggqqplot(task_df, "ave_pupil_index", ggtheme = theme_bw()) +
+ggqqplot(task_df, "tlx_insecure", ggtheme = theme_bw()) +
   facet_grid(ring_id ~ auto_level, labeller = "label_both")
 
 
@@ -179,7 +179,7 @@ ggqqplot(task_df, "ave_pupil_index", ggtheme = theme_bw()) +
 
 ######################### Two-way mixed ANOVA test #########################  
 res.aov <- anova_test(
-  data = task_df, dv = ave_pupil_index, wid = part_id,
+  data = task_df, dv = tlx_insecure, wid = part_id,
   within = c(auto_level, ring_id)
   )
 get_anova_table(res.aov)
@@ -188,7 +188,7 @@ get_anova_table(res.aov)
 #################### Effect of auto_level for each ring_id #################### 
 one.way <- task_df %>%
   group_by(ring_id) %>%
-  anova_test(dv = ave_pupil_index, wid = part_id, within = auto_level) %>%
+  anova_test(dv = tlx_insecure, wid = part_id, within = auto_level) %>%
   get_anova_table() %>%
   adjust_pvalue(method = "bonferroni")
 one.way
@@ -196,7 +196,7 @@ one.way
 #################### Effect of ring_id for each auto_level #################### 
 one.way <- task_df %>%
   group_by(auto_level) %>%
-  anova_test(dv = ave_pupil_index, wid = part_id, within = ring_id) %>%
+  anova_test(dv = tlx_insecure, wid = part_id, within = ring_id) %>%
   get_anova_table() %>%
   adjust_pvalue(method = "bonferroni")
 one.way
@@ -206,7 +206,7 @@ one.way
 pwc <- task_df %>%
   group_by(ring_id) %>%
   pairwise_t_test(
-    ave_pupil_index ~ auto_level, paired = TRUE,
+    tlx_insecure ~ auto_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc
@@ -215,7 +215,7 @@ pwc
 pwc <- task_df %>%
   group_by(auto_level) %>%
   pairwise_t_test(
-    ave_pupil_index ~ ring_id, paired = TRUE,
+    tlx_insecure ~ ring_id, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc
@@ -228,7 +228,7 @@ pwc
 ```{r fit model}
 
 ###### fit linear mixed model 1 ######
-model <- lmer(ave_pupil_index ~ auto_num * fitts_id_num + (1 | part_id),
+model <- lmer(tlx_insecure ~ auto_num * fitts_id_num + (1 | part_id),
               data = task_df)
 summary(model)
 
@@ -236,6 +236,18 @@ interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.
 # interact_plot(model, pred = fitts_id_num, modx = auto_num, plot.points = TRUE, interval = TRUE, int.width = 0.8)
 
 interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
+
+
+###### fit linear mixed model 2 ######
+fit <- lm(tlx_insecure ~ fitts_id_num * auto_level, data = task_df)
+summary(fit)
+
+interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              # plot.points = TRUE,
+              x.label="Fitts ID", y.label="NASA-TLX (Insecure)", 
+              modx.labels = c("low", "med", "high")
+              )
 
 
 ```
