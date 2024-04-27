@@ -20,6 +20,7 @@ library(lme4)
 library(dplyr)
 library(ez)
 library(ltm)
+library(interactions)
 ```
 
 
@@ -27,8 +28,8 @@ library(ltm)
 
 ```{r read csv}
 
-setwd("C:/Users/micha/OneDrive/My_GitHub_Repos/AutonomyFitts/data/task/")
-task_df <- read_csv("all_parts_joined.csv")
+setwd("C:/Users/micha/OneDrive/My_GitHub_Repos/AutonomyFitts/data/")
+task_df <- read_csv("all_data.csv")
 
 auto_levels_order <- c("low_auto", "med_auto", "high_auto")  # Replace these with your actual level names
 
@@ -218,6 +219,24 @@ pwc <- task_df %>%
     p.adjust.method = "bonferroni"
     )
 pwc
+
+```
+
+
+## Fit Linear Model
+
+```{r fit model}
+
+###### fit linear mixed model 1 ######
+model <- lmer(ave_size ~ auto_num * fitts_id_num + (1 | part_id),
+              data = task_df)
+summary(model)
+
+interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.width = 0.8)
+# interact_plot(model, pred = fitts_id_num, modx = auto_num, plot.points = TRUE, interval = TRUE, int.width = 0.8)
+
+interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
+
 
 ```
 

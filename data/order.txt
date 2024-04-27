@@ -1,0 +1,22 @@
+####################
+
+==> Make sure to change the "NUM_PARTICIPANTS" variable to be correct
+
+
+############## 1. task ##############
+
+step 1: run get_all_times.py
+
+step 2: run linreg.ipynb (enable plotting to check quality)
+
+step 3: run join_all_parts.py
+
+
+############## 2. form ##############
+
+step 1: run preprocess_form.py
+
+
+############## 3. join all data ##############
+
+step 1: run join_all_data.py
