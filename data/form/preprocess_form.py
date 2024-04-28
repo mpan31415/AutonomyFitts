@@ -9,17 +9,40 @@ FITTS_ID_LIST = [2.788, 3.68, 3.68, 4.623]
 
 
 ##########################################################################################
-def get_raw_data():
+def get_main_data():
     
-    my_file_dir = getcwd() + "\data\\form\\main_form_raw.csv"
-    big_df = read_csv(my_file_dir)
-    num_cols = big_df.shape[1]
-    df = big_df.iloc[:, 17:num_cols]
-    df = df.fillna(1)
+    main_form_dir = getcwd() + "\data\\form\\main_form_raw.csv"
+    main_df = read_csv(main_form_dir)
+    num_cols = main_df.shape[1]
+    main_df = main_df.iloc[:, 17:num_cols]
+    main_df = main_df.fillna(1)
     
-    print("\n Finished reading raw csv file! \n")
+    print("\n Finished reading raw main form csv file! \n")
     
-    return df
+    return main_df
+
+
+##########################################################################################
+def get_demo_data():
+    
+    demo_form_dir = getcwd() + "\data\\form\\demo_form_raw.csv"
+    demo_df = read_csv(demo_form_dir)
+    num_cols = demo_df.shape[1]
+    demo_df = demo_df.iloc[2:, 17:num_cols].reset_index(drop=True)
+    # demo_df = demo_df.fillna(1)
+    
+    print("\n Finished reading raw demo form csv file! \n")
+    
+    return demo_df
+
+
+##########################################################################################
+def duplicate_list(lst, num_dup):
+    new_lst = []
+    for n in lst:
+        for i in range(num_dup):
+            new_lst.append(n)
+    return new_lst
 
 
 ##########################################################################################
@@ -53,7 +76,7 @@ def get_fitts_id_level(ring_id):
 ##########################################################################################
 def preprocess_form():
     
-    raw = get_raw_data()
+    raw = get_main_data()
     
     # get first 3 columns as lists: part_id, alpha_id, ring_id
     part_id_list = raw.iloc[2:NUM_PARTICIPANTS*12+2, 0].apply(lambda x: int(x)).tolist()
@@ -109,6 +132,16 @@ def preprocess_form():
     ######################### PERCEIVED AUTONOMY + SINGLE-SCALE TRUST #########################
     per_auto_list = raw.iloc[2:NUM_PARTICIPANTS*12+2, 17].apply(lambda x: float(x)).tolist()
     single_trust_list = raw.iloc[2:NUM_PARTICIPANTS*12+2, 18].apply(lambda x: float(x)).tolist()
+    
+    
+    ######################### GET DEMOGRAPHICS DATA #########################
+    demo_df = get_demo_data()
+    gender_list = duplicate_list(demo_df['Q2'].apply(lambda x: int(x)).tolist(), 12)
+    age_list = duplicate_list(demo_df['Q3'].apply(lambda x: int(x)).tolist(), 12)
+    right_handed_list = duplicate_list(demo_df['Q4'].apply(lambda x: int(x)).tolist(), 12)
+    trust_tech_list = duplicate_list(demo_df['Q5_1'].apply(lambda x: int(x)).tolist(), 12)
+    video_game_list = duplicate_list(demo_df['Q5_2'].apply(lambda x: int(x)).tolist(), 12)
+    music_inst_list = duplicate_list(demo_df['Q5_3'].apply(lambda x: int(x)).tolist(), 12)
 
 
     ######################### GENERATE NEW DATAFRAME #########################
@@ -139,7 +172,13 @@ def preprocess_form():
         'mdmt_capable_ave': capable_ave_list,
         'mdmt_ave': mdmt_ave_list,
         'per_auto': per_auto_list,
-        'single_trust': single_trust_list
+        'single_trust': single_trust_list,
+        'gender': gender_list,
+        'age': age_list,
+        'right_handed': right_handed_list,
+        'trust_tech': trust_tech_list,
+        'video_game': video_game_list,
+        'music_instrument': music_inst_list
     }
     processed_df = DataFrame(df_dict)
     
@@ -153,6 +192,6 @@ if __name__ == "__main__":
     processed_df = preprocess_form()
 
     # write processed dataframe to csv file
-    dest_path = getcwd() + "\\data\\form\\main_form_processed.csv"
+    dest_path = getcwd() + "\\data\\form\\form_processed.csv"
     processed_df.to_csv(dest_path, index=False)
     print(" Successfully written pre-processed data to csv file! \n")

@@ -5,16 +5,20 @@
 
 ############## 1. task ##############
 
-step 1: run get_all_times.py
+step 1: get_all_times.py
 
-step 2: run linreg.ipynb (enable plotting to check quality)
+step 2: linreg.ipynb (enable plotting to check quality)
 
-step 3: run join_all_parts.py
+step 3: join_all_parts.py
+
+step 4: traj_analysis.ipynb (only for looking at the error trajectories of robot and human)
 
 
 ############## 2. form ##############
 
 step 1: run preprocess_form.py
+
+step 2: run demo_analysis.ipynb (just to check age, gender, handedness, not part of overall statistical analysis)
 
 
 ############## 3. join all data ##############
