@@ -5,22 +5,24 @@
 
 ############## 1. task ##############
 
-step 1: get_all_times.py
+step 1: get_all_times.py  ->  {/all_times, /half_header_files}
 
-step 2: linreg.ipynb (enable plotting to check quality)
+step 2: linreg.ipynb (enable plotting to check quality)  ->  {linreg_params.csv}
 
-step 3: join_all_parts.py
+step 3: join_all_parts.py   ->  {all_parts_joined.csv}
 
-step 4: traj_analysis.ipynb (only for looking at the error trajectories of robot and human)
+step 4: traj_analysis.ipynb (only for looking at the error trajectories of robot and human)  ->  {None}
 
 
 ############## 2. form ##############
 
-step 1: run preprocess_form.py
+[NEED: demo_form_raw.csv, main_form_raw.csv]
 
-step 2: run demo_analysis.ipynb (just to check age, gender, handedness, not part of overall statistical analysis)
+step 1: run preprocess_form.py  ->  {form_processed.csv}
+
+step 2: run demo_analysis.ipynb (just to check age, gender, handedness, not part of overall statistical analysis)  ->  {None}
 
 
 ############## 3. join all data ##############
 
-step 1: run join_all_data.py
+step 1: run join_all_data.py  ->  {all_data.csv}

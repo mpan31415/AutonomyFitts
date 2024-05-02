@@ -2,7 +2,7 @@ from pandas import read_csv, DataFrame, concat
 from os import getcwd
 
 
-NUM_PARTICIPANTS = 8
+NUM_PARTICIPANTS = 20
 
 
 ##########################################################################################
