@@ -4,7 +4,7 @@ from ast import literal_eval
 from pathlib import Path
 
 
-NUM_PARTICIPANTS = 20
+NUM_PARTICIPANTS = 24
 
 FITTS_ID_LIST = [2.788, 3.68, 3.68, 4.623]
 

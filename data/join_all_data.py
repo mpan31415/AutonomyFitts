@@ -2,7 +2,7 @@ from pandas import read_csv, concat
 from os import getcwd
 
 
-NUM_PARTICIPANTS = 8
+NUM_PARTICIPANTS = 24
 
 ###### ring_id order: [1, 2, 3, 4]
 # ROBOT_MOVE_TIMES = [0.8, 1.3, 0.8, 1.3]

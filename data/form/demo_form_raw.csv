@@ -1,11 +1,27 @@
 StartDate,EndDate,Status,IPAddress,Progress,Duration (in seconds),Finished,RecordedDate,ResponseId,RecipientLastName,RecipientFirstName,RecipientEmail,ExternalReference,LocationLatitude,LocationLongitude,DistributionChannel,UserLanguage,Q1,Q2,Q2_3_TEXT,Q3,Q4,Q5_1,Q5_2,Q5_3
 Start Date,End Date,Response Type,IP Address,Progress,Duration (in seconds),Finished,Recorded Date,Response ID,Recipient Last Name,Recipient First Name,Recipient Email,External Data Reference,Location Latitude,Location Longitude,Distribution Channel,User Language,Participant ID,Please select your gender: - Selected Choice,Please select your gender: - Other (please specify): - Text,Please enter your age:,Are you right / left handed?,Please read the following sentences and indicate the extent to which you agree with them. - I usually trust new technology until it gives me a reason not to.,Please read the following sentences and indicate the extent to which you agree with them. - I play video games regularly.,Please read the following sentences and indicate the extent to which you agree with them. - I play a musical instrument and can play it well.
 "{""ImportId"":""startDate"",""timeZone"":""Australia/Canberra""}","{""ImportId"":""endDate"",""timeZone"":""Australia/Canberra""}","{""ImportId"":""status""}","{""ImportId"":""ipAddress""}","{""ImportId"":""progress""}","{""ImportId"":""duration""}","{""ImportId"":""finished""}","{""ImportId"":""recordedDate"",""timeZone"":""Australia/Canberra""}","{""ImportId"":""_recordId""}","{""ImportId"":""recipientLastName""}","{""ImportId"":""recipientFirstName""}","{""ImportId"":""recipientEmail""}","{""ImportId"":""externalDataReference""}","{""ImportId"":""locationLatitude""}","{""ImportId"":""locationLongitude""}","{""ImportId"":""distributionChannel""}","{""ImportId"":""userLanguage""}","{""ImportId"":""QID7_TEXT""}","{""ImportId"":""QID1""}","{""ImportId"":""QID1_3_TEXT""}","{""ImportId"":""QID3_TEXT""}","{""ImportId"":""QID8""}","{""ImportId"":""QID6_2""}","{""ImportId"":""QID6_3""}","{""ImportId"":""QID6_4""}"
-2024-04-24 17:48:39,2024-04-24 17:49:47,0,128.250.0.211,100,67,1,2024-04-24 17:49:48,R_4wIwzD4jFGpjiEh,,,,,-37.8159,144.9669,anonymous,EN,1,1,,24,1,5,2,3
-2024-04-25 09:52:50,2024-04-25 09:53:59,0,128.250.0.211,100,68,1,2024-04-25 09:53:59,R_4Ute26RsQiUViYV,,,,,-37.8159,144.9669,anonymous,EN,2,2,,21,1,4,7,1
-2024-04-25 10:54:14,2024-04-25 10:55:06,0,128.250.0.211,100,51,1,2024-04-25 10:55:07,R_4TNaQzBUtUBHUNo,,,,,-37.8159,144.9669,anonymous,EN,3,1,,24,1,5,5,1
-2024-04-25 12:03:03,2024-04-25 12:03:43,0,128.250.0.211,100,40,1,2024-04-25 12:03:43,R_4w7ghk6xazMbIfx,,,,,-37.8159,144.9669,anonymous,EN,4,2,,27,1,6,6,2
-2024-04-25 14:04:57,2024-04-25 14:05:26,0,128.250.0.211,100,28,1,2024-04-25 14:05:26,R_4FJ0eCHPlM3mmpd,,,,,-37.8159,144.9669,anonymous,EN,5,2,,20,1,5,7,3
-2024-04-25 14:53:20,2024-04-25 14:53:40,0,128.250.0.211,100,19,1,2024-04-25 14:53:40,R_4iy5w6z9fqzJFet,,,,,-37.8159,144.9669,anonymous,EN,6,2,,21,1,7,3,6
-2024-04-25 16:38:07,2024-04-25 16:38:58,0,128.250.0.211,100,50,1,2024-04-25 16:38:58,R_4dhm6xktKkadh5L,,,,,-37.8159,144.9669,anonymous,EN,7,2,,25,1,4,5,1
-2024-04-25 17:48:06,2024-04-25 17:48:54,0,128.250.0.211,100,48,1,2024-04-25 17:48:55,R_4Z4ntxe62SdkoOl,,,,,-37.8159,144.9669,anonymous,EN,8,1,,19,1,3,1,6
+24/04/2024 17:48,24/04/2024 17:49,0,128.250.0.211,100,67,1,24/04/2024 17:49,R_4wIwzD4jFGpjiEh,,,,,-37.8159,144.9669,anonymous,EN,1,1,,24,1,5,2,3
+25/04/2024 9:52,25/04/2024 9:53,0,128.250.0.211,100,68,1,25/04/2024 9:53,R_4Ute26RsQiUViYV,,,,,-37.8159,144.9669,anonymous,EN,2,2,,21,1,4,7,1
+25/04/2024 10:54,25/04/2024 10:55,0,128.250.0.211,100,51,1,25/04/2024 10:55,R_4TNaQzBUtUBHUNo,,,,,-37.8159,144.9669,anonymous,EN,3,1,,24,1,5,5,1
+25/04/2024 12:03,25/04/2024 12:03,0,128.250.0.211,100,40,1,25/04/2024 12:03,R_4w7ghk6xazMbIfx,,,,,-37.8159,144.9669,anonymous,EN,4,2,,27,1,6,6,2
+25/04/2024 14:04,25/04/2024 14:05,0,128.250.0.211,100,28,1,25/04/2024 14:05,R_4FJ0eCHPlM3mmpd,,,,,-37.8159,144.9669,anonymous,EN,5,2,,20,1,5,7,3
+25/04/2024 14:53,25/04/2024 14:53,0,128.250.0.211,100,19,1,25/04/2024 14:53,R_4iy5w6z9fqzJFet,,,,,-37.8159,144.9669,anonymous,EN,6,2,,21,1,7,3,6
+25/04/2024 16:38,25/04/2024 16:38,0,128.250.0.211,100,50,1,25/04/2024 16:38,R_4dhm6xktKkadh5L,,,,,-37.8159,144.9669,anonymous,EN,7,2,,25,1,4,5,1
+25/04/2024 17:48,25/04/2024 17:48,0,128.250.0.211,100,48,1,25/04/2024 17:48,R_4Z4ntxe62SdkoOl,,,,,-37.8159,144.9669,anonymous,EN,8,1,,19,1,3,1,6
+30/04/2024 9:58,30/04/2024 9:59,0,128.250.0.195,100,35,1,30/04/2024 9:59,R_4hhJCXdqEwKUNlR,,,,,-37.8159,144.9669,anonymous,EN,9,1,,24,1,5,4,2
+30/04/2024 10:52,30/04/2024 10:54,0,128.250.0.195,100,150,1,30/04/2024 10:54,R_4QGjfOVGbIYbodq,,,,,-37.8159,144.9669,anonymous,EN,10,1,,23,1,5,7,4
+1/05/2024 10:46,1/05/2024 10:46,0,128.250.0.195,100,40,1,1/05/2024 10:46,R_45yWMBbk6B89LUK,,,,,-37.8159,144.9669,anonymous,EN,11,2,,25,1,6,5,2
+1/05/2024 12:00,1/05/2024 12:01,0,128.250.0.195,100,24,1,1/05/2024 12:01,R_42XnqqoJVAmTAYT,,,,,-37.8159,144.9669,anonymous,EN,12,1,,25,1,4,1,7
+1/05/2024 14:04,1/05/2024 14:04,0,128.250.0.55,100,32,1,1/05/2024 14:04,R_4rmURb7l5NatuQp,,,,,-37.8159,144.9669,qr,EN,13,1,,24,1,6,1,1
+1/05/2024 15:28,1/05/2024 15:29,0,128.250.0.55,100,38,1,1/05/2024 15:29,R_4Jhi5uAnDjA7UkA,,,,,-37.8159,144.9669,qr,EN,14,1,,22,1,6,6,6
+1/05/2024 16:32,1/05/2024 16:33,0,128.250.0.55,100,35,1,1/05/2024 16:33,R_4kUHpwwFUQuImd8,,,,,-37.8159,144.9669,qr,EN,15,1,,23,3,7,7,7
+1/05/2024 17:50,1/05/2024 17:50,0,128.250.0.55,100,24,1,1/05/2024 17:50,R_4w5D0RLWj4TLCgs,,,,,-37.8159,144.9669,qr,EN,16,2,,37,1,6,6,4
+2/05/2024 10:38,2/05/2024 10:38,0,128.250.0.55,100,21,1,2/05/2024 10:38,R_4XbQtPK66f69N05,,,,,-37.8159,144.9669,qr,EN,17,1,,19,1,5,6,1
+2/05/2024 11:50,2/05/2024 11:51,0,128.250.0.55,100,40,1,2/05/2024 11:51,R_4PpEi0Pd3JFaXWB,,,,,-37.8159,144.9669,qr,EN,18,1,,18,1,7,4,4
+2/05/2024 14:15,2/05/2024 14:15,0,128.250.0.55,100,34,1,2/05/2024 14:15,R_4LdjJQVBPsqYphk,,,,,-37.8159,144.9669,qr,EN,19,1,,20,1,5,1,5
+2/05/2024 15:13,2/05/2024 15:13,0,128.250.0.55,100,40,1,2/05/2024 15:13,R_4bKnaVIfGuLfKgN,,,,,-37.8159,144.9669,qr,EN,20,1,,23,1,6,1,1
+2/05/2024 16:33,2/05/2024 16:34,0,128.250.0.55,100,24,1,2/05/2024 16:34,R_4zhCeTurGlk0XOA,,,,,-37.8159,144.9669,qr,EN,21,1,,30,1,5,5,3
+3/05/2024 14:33,3/05/2024 14:34,0,128.250.0.126,100,81,1,3/05/2024 14:34,R_48SQeDcmQD557yr,,,,,-37.8159,144.9669,anonymous,EN,22,2,,23,1,6,3,6
+3/05/2024 10:59,3/05/2024 11:00,0,128.250.0.55,100,48,1,3/05/2024 11:00,R_45Mj7kzIk3wAYgN,,,,,-37.8159,144.9669,qr,EN,23,1,,23,1,3,2,4
+3/05/2024 11:58,3/05/2024 11:59,0,128.250.0.55,100,25,1,3/05/2024 11:59,R_4xK60jtAt6uRs6E,,,,,-37.8159,144.9669,qr,EN,24,2,,23,1,7,1,1

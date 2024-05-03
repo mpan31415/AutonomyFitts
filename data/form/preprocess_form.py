@@ -2,7 +2,7 @@ from pandas import read_csv, DataFrame
 from os import getcwd
 
 
-NUM_PARTICIPANTS = 8
+NUM_PARTICIPANTS = 24
 
 FITTS_ID_LIST = [2.788, 3.68, 3.68, 4.623]
 
