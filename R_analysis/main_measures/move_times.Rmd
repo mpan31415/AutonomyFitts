@@ -232,9 +232,9 @@ model <- lmer(average_mt ~ auto_num * fitts_id_num + (1 | part_id),
               data = task_df)
 summary(model)
 
-interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.width = 0.8)
+# interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.width = 0.8)
 # interact_plot(model, pred = fitts_id_num, modx = auto_num, plot.points = TRUE, interval = TRUE, int.width = 0.8)
-interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
+# interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
 
 
 
@@ -244,7 +244,7 @@ summary(fit)
 
 interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
               interval = TRUE, int.type = "confidence", int.width = .8,
-              # plot.points = TRUE,
+              plot.points = TRUE,
               x.label="Fitts ID", y.label="Move time (s)", 
               modx.labels = c("low", "med", "high")
               )

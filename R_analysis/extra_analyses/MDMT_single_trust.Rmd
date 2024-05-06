@@ -127,8 +127,8 @@ interact_plot(fit3, pred = mdmt_ave, modx = fitts_id_level,
 
 ###### correlation by autonomy group ######
 correlation_by_group <- task_df %>%
-  group_by(ring_id) %>%
-  summarise(correlation = cor(auto_num, eff_auto_num))
+  group_by(auto_level) %>%
+  summarise(correlation = cor(single_trust, mdmt_ave))
 
 print(correlation_by_group)
 

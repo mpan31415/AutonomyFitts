@@ -21,6 +21,7 @@ library(dplyr)
 library(ez)
 library(ltm)
 library(interactions)
+library(lmerTest)
 ```
 
 
@@ -32,15 +33,19 @@ setwd("C:/Users/micha/OneDrive/My_GitHub_Repos/AutonomyFitts/data/")
 task_df <- read_csv("all_data.csv")
 
 auto_levels_order <- c("low_auto", "med_auto", "high_auto")  # Replace these with your actual level names
+fitts_id_levels_order <- c("low_fitts_id", "med_fitts_id1", "med_fitts_id2", "high_fitts_id")  # Replace these with your actual level names
 
 # Reorder the factor levels of "auto_level" according to levels_order
 task_df$auto_level <- factor(task_df$auto_level, levels = auto_levels_order)
+
+# Reorder the factor levels of "fitts_id_level" according to levels_order
+task_df$fitts_id_level <- factor(task_df$fitts_id_level, levels = fitts_id_levels_order)
 
 
 ######################### get mean and sd (or se) ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  get_summary_stats(tlx_successful, type = "mean_sd")
+  get_summary_stats(eff_id, type = "mean_sd")
 
 
 
@@ -66,7 +71,7 @@ task_df %>%
 #         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
 
 # ######################### cool box plot (courtesy of Sarah) #########################
-# ggplot(task_df,aes(x=auto_level,y=tlx_successful, fill=auto_level))+geom_boxplot(aes(fill=auto_level)) + labs( x = "auto_level", y = "tlx_successful", fill = "auto_level") +   theme_minimal() +
+# ggplot(task_df,aes(x=auto_level,y=eff_id, fill=auto_level))+geom_boxplot(aes(fill=auto_level)) + labs( x = "auto_level", y = "eff_id", fill = "auto_level") +   theme_minimal() +
 # stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
 # scale_fill_brewer(palette = "Set2") +
 #     theme(plot.title = element_text(size = 15, face = "bold"),
@@ -143,7 +148,7 @@ task_df %>%
 
 
 bxp <- ggboxplot(
-  task_df, x = "ring_id", y = "tlx_successful",
+  task_df, x = "ring_id", y = "eff_id",
   color = "auto_level", palette = "jco"
   )
 bxp
@@ -158,15 +163,15 @@ bxp
 ######################### check for outliers ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  identify_outliers(tlx_successful)
+  identify_outliers(eff_id)
 
 ######################### check normality ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  shapiro_test(tlx_successful)
+  shapiro_test(eff_id)
 
 ######################### plot normality ######################### 
-ggqqplot(task_df, "tlx_successful", ggtheme = theme_bw()) +
+ggqqplot(task_df, "eff_id", ggtheme = theme_bw()) +
   facet_grid(ring_id ~ auto_level, labeller = "label_both")
 
 
@@ -179,7 +184,7 @@ ggqqplot(task_df, "tlx_successful", ggtheme = theme_bw()) +
 
 ######################### Two-way mixed ANOVA test #########################  
 res.aov <- anova_test(
-  data = task_df, dv = tlx_successful, wid = part_id,
+  data = task_df, dv = eff_id, wid = part_id,
   within = c(auto_level, ring_id)
   )
 get_anova_table(res.aov)
@@ -188,7 +193,7 @@ get_anova_table(res.aov)
 #################### Effect of auto_level for each ring_id #################### 
 one.way <- task_df %>%
   group_by(ring_id) %>%
-  anova_test(dv = tlx_successful, wid = part_id, within = auto_level) %>%
+  anova_test(dv = eff_id, wid = part_id, within = auto_level) %>%
   get_anova_table() %>%
   adjust_pvalue(method = "bonferroni")
 one.way
@@ -196,7 +201,7 @@ one.way
 #################### Effect of ring_id for each auto_level #################### 
 one.way <- task_df %>%
   group_by(auto_level) %>%
-  anova_test(dv = tlx_successful, wid = part_id, within = ring_id) %>%
+  anova_test(dv = eff_id, wid = part_id, within = ring_id) %>%
   get_anova_table() %>%
   adjust_pvalue(method = "bonferroni")
 one.way
@@ -206,7 +211,7 @@ one.way
 pwc <- task_df %>%
   group_by(ring_id) %>%
   pairwise_t_test(
-    tlx_successful ~ auto_level, paired = TRUE,
+    eff_id ~ auto_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc
@@ -215,10 +220,40 @@ pwc
 pwc <- task_df %>%
   group_by(auto_level) %>%
   pairwise_t_test(
-    tlx_successful ~ ring_id, paired = TRUE,
+    eff_id ~ ring_id, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc
+
+```
+
+# scatterplot and save, and compute correlation
+```{r correlation}
+
+######################### scatterplot ######################### 
+p <- ggscatter(task_df, x = "fitts_id_num", y = "eff_id",
+          add = "reg.line",                                 # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray"),
+          xlab = "Fitts ID", ylab = "Effective ID"
+          ) 
+      # + theme(plot.title = element_text(size = 15, face = "bold"),
+      #   axis.title.x = element_text(size = 28, face = "bold"),
+      #   axis.title.y = element_text(size = 28, face = "bold"),
+      #   axis.text = element_text(size = 24),
+      #   legend.title = element_text(size = 28),
+      #   legend.text = element_text(size = 28),
+      #   legend.position= "none")
+  # stat_cor(method = "pearson", label.x = 1.5, label.y = 7.5)  # Add correlation coefficient
+p
+# ggsave(file="pdfs/perf_trust_corr.pdf", plot=p, width=10, height=6)
+
+
+######################### correlation test ######################### 
+res <- cor.test(task_df$fitts_id_num, task_df$eff_id, 
+                    method = "pearson")
+res
 
 ```
 
@@ -228,26 +263,43 @@ pwc
 ```{r fit model}
 
 ###### fit linear mixed model 1 ######
-model <- lmer(tlx_successful ~ auto_num * fitts_id_num + (1 | part_id),
+model <- lmer(eff_id ~ fitts_id_num * auto_num + (1 | part_id),
               data = task_df)
 summary(model)
 
-interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.width = 0.8)
+# anova(model)
+# interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.width = 0.8)
 # interact_plot(model, pred = fitts_id_num, modx = auto_num, plot.points = TRUE, interval = TRUE, int.width = 0.8)
-
-interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
+# interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
 
 
 ###### fit linear mixed model 2 ######
-fit <- lm(tlx_successful ~ fitts_id_num * auto_level, data = task_df)
-summary(fit)
-
+fit <- lm(eff_id ~ fitts_id_num * auto_level, data = task_df)
+# summary(fit)
 interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
               interval = TRUE, int.type = "confidence", int.width = .8,
-              # plot.points = TRUE,
-              x.label="Fitts ID", y.label="Averaged NASA-TLX", 
+              plot.points = TRUE,
+              x.label="Fitts ID", y.label="Effective Fitts ID", 
               modx.labels = c("low", "med", "high")
               )
+
+
+###### fit linear mixed model 3 ######
+fit3 <- lm(eff_id ~ auto_num * fitts_id_level, data = task_df)
+# summary(fit3)
+interact_plot(fit3, pred = auto_num, modx = fitts_id_level, 
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              plot.points = TRUE,
+              x.label="Autonomy", y.label="Effective Fitts ID", 
+              modx.labels = c("low", "med1", "med2", "high")
+              )
+
+###### correlation by autonomy group ######
+correlation_by_group <- task_df %>%
+  group_by(auto_level) %>%
+  summarise(correlation = cor(fitts_id_num, eff_id))
+
+print(correlation_by_group)
 
 
 ```
