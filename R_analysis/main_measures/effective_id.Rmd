@@ -21,7 +21,6 @@ library(dplyr)
 library(ez)
 library(ltm)
 library(interactions)
-library(lmerTest)
 ```
 
 
@@ -55,103 +54,11 @@ task_df %>%
 
 ```{r do plotting}
 
-# ######################### cool box plot (courtesy of Sarah) #########################
-# ggplot(task_df,aes(x=order,y=time, fill=order))+geom_boxplot(aes(fill=order)) + labs( x = "Order", y = "time", fill = "Order") +   theme_minimal() +
-# # stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
-# scale_fill_brewer(palette = "Set2") +
-#     theme(plot.title = element_text(size = 15, face = "bold"),
-#         axis.title.x = element_text(size = 14, face = "bold"),
-#         axis.title.y = element_text(size = 14, face = "bold"),
-# axis.text = element_text(size = 16),
-#         legend.title = element_text(size = 12),
-#         legend.text = element_text(size = 11),
-#         legend.position= "none") +
-#   facet_grid(. ~ autonomy) +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-#         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
-
-# ######################### cool box plot (courtesy of Sarah) #########################
-# ggplot(task_df,aes(x=auto_level,y=eff_id, fill=auto_level))+geom_boxplot(aes(fill=auto_level)) + labs( x = "auto_level", y = "eff_id", fill = "auto_level") +   theme_minimal() +
-# stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
-# scale_fill_brewer(palette = "Set2") +
-#     theme(plot.title = element_text(size = 15, face = "bold"),
-#         axis.title.x = element_text(size = 14, face = "bold"),
-#         axis.title.y = element_text(size = 14, face = "bold"),
-# axis.text = element_text(size = 16),
-#         legend.title = element_text(size = 12),
-#         legend.text = element_text(size = 11),
-#         legend.position= "none") +
-#   facet_grid(. ~ ring_id) +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-#         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
-
-# 
-# 
-# ######################### cool dot plot #########################
-# ggplot(task_df,aes(x=order,y=time, fill=order)) + geom_boxplot() + geom_dotplot(binaxis='y', stackdir='center', stackratio=1.5, dotsize=1.2) +
-#                     labs( x = "Order", y = "time", fill = "Order") + theme_minimal() +
-# # stat_summary(fun = mean, geom = "point",size = 3, shape = 2, position = position_dodge(0.75), show.legend = FALSE) +
-# scale_fill_brewer(palette = "Set2") +
-#     theme(plot.title = element_text(size = 15, face = "bold"),
-#         axis.title.x = element_text(size = 14, face = "bold"),
-#         axis.title.y = element_text(size = 14, face = "bold"),
-#         axis.text = element_text(size = 16),
-#         legend.title = element_text(size = 12),
-#         legend.text = element_text(size = 11),
-#         legend.position= "none") +
-#   facet_grid(. ~ autonomy) +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-#         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 12), legend.position = "none")
-
-
-# ## define custom median function
-# plot.median <- function(x) {
-#   m <- median(x)
-#   c(y = m, ymin = m, ymax = m)
-# }
-# 
-# ## define custom mean function
-# plot.median <- function(x) {
-#   m <- mean(x)
-#   c(y = m, ymin = m, ymax = m)
-# }
-# 
-# ######################### cool dot plot 2 ######################### 
-# p <- ggplot(task_df,aes(x=order,y=time, fill=order)) + geom_dotplot(binaxis='y', stackdir='center', stackratio=1.5, dotsize=0.6) + 
-#                     labs( x = "Order", y = "NASA-TLX", fill = "Order") + theme_minimal() +
-# stat_summary(fun.y = mean, geom="crossbar", colour="red", width=0.5, size=0.5) +
-# scale_fill_brewer(palette = "Set2") +
-#     theme(plot.title = element_text(size = 15, face = "bold"),
-#         axis.title.x = element_text(size = 18, face = "bold"),
-#         axis.title.y = element_text(size = 18, face = "bold"),
-#         axis.text = element_text(size = 18),
-#         legend.title = element_text(size = 12),
-#         legend.text = element_text(size = 11),
-#         legend.position= "none") +
-#   facet_grid(. ~ autonomy, ) +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-#         strip.text.x = element_text(angle = 0, hjust = 0.5, size = 18), legend.position = "none")
-# 
-# p
-# 
-# ggexport(p, filename = "pdfs/tlx.pdf")
-
-# bxp <- ggboxplot(task_df, x = "condition", y = "time", add = "point")
-# bxp
-# # ggexport(bxp, filename = "tlx.png")
-# 
-# task_df %>%
-#   ggplot( aes(x=condition, y=time)) +
-#     geom_line() +
-#     geom_point()
-
-
-
-bxp <- ggboxplot(
+bxp1 <- ggboxplot(
   task_df, x = "ring_id", y = "eff_id",
   color = "auto_level", palette = "jco"
   )
-bxp
+bxp1
 
 ```
 
@@ -178,7 +85,7 @@ ggqqplot(task_df, "eff_id", ggtheme = theme_bw()) +
 ```
 
 
-## Fit Model
+## Fit ANOVA
 
 ```{r fit model}
 
@@ -190,45 +97,91 @@ res.aov <- anova_test(
 get_anova_table(res.aov)
 
 
-#################### Effect of auto_level for each ring_id #################### 
-one.way <- task_df %>%
-  group_by(ring_id) %>%
-  anova_test(dv = eff_id, wid = part_id, within = auto_level) %>%
-  get_anova_table() %>%
-  adjust_pvalue(method = "bonferroni")
-one.way
+# #################### Effect of auto_level for each ring_id #################### 
+# one.way <- task_df %>%
+#   group_by(ring_id) %>%
+#   anova_test(dv = eff_id, wid = part_id, within = auto_level) %>%
+#   get_anova_table() %>%
+#   adjust_pvalue(method = "bonferroni")
+# one.way
+# 
+# #################### Effect of ring_id for each auto_level #################### 
+# one.way <- task_df %>%
+#   group_by(auto_level) %>%
+#   anova_test(dv = eff_id, wid = part_id, within = ring_id) %>%
+#   get_anova_table() %>%
+#   adjust_pvalue(method = "bonferroni")
+# one.way
 
-#################### Effect of ring_id for each auto_level #################### 
-one.way <- task_df %>%
-  group_by(auto_level) %>%
-  anova_test(dv = eff_id, wid = part_id, within = ring_id) %>%
-  get_anova_table() %>%
-  adjust_pvalue(method = "bonferroni")
-one.way
 
-
-#################### Pairwise comparisons between auto_level groups #################### 
-pwc <- task_df %>%
-  group_by(ring_id) %>%
+#################### Pairwise comparisons between auto_level groups for each ring_id #################### 
+pwc1 <- task_df %>%
+  group_by(fitts_id_level) %>%
   pairwise_t_test(
     eff_id ~ auto_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
-pwc
+pwc1
+# Create a box plot
+pwc1 <- pwc1 %>% add_xy_position(x = "auto_level", group = "fitts_id_level")
+bxp2 <- ggboxplot(
+  task_df, x = "auto_level", y = "eff_id", 
+  color = "fitts_id_level", palette = "jco"
+) +
+  stat_pvalue_manual(
+    pwc1, color = "fitts_id_level", group.by = "legend.var",
+    bracket.nudge.y = 0.2, step.increase = 0.15, label.size = 3, vjust = 0.1,
+    tip.length = 0, y.position = 20
+  )
+bxp2
 
-#################### Pairwise comparisons between auto_level groups #################### 
-pwc <- task_df %>%
+
+#################### Pairwise comparisons between ring_id groups for each auto_level #################### 
+pwc2 <- task_df %>%
   group_by(auto_level) %>%
   pairwise_t_test(
-    eff_id ~ ring_id, paired = TRUE,
+    eff_id ~ fitts_id_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
-pwc
+pwc2
+# Create a box plot
+pwc2 <- pwc2 %>% add_xy_position(x = "fitts_id_level", group = "auto_level")
+bxp3 <- ggboxplot(
+  task_df, x = "fitts_id_level", y = "eff_id", 
+  color = "auto_level", palette = "jco"
+) +
+  stat_pvalue_manual(
+    pwc2, color = "auto_level", group.by = "legend.var",
+    bracket.nudge.y = 0.2, step.increase = 0.5, label.size = 3, vjust = 0.1,
+    tip.length = 0, y.position = 20
+  )
+bxp3
+
 
 ```
 
-# scatterplot and save, and compute correlation
-```{r correlation}
+
+## Fit Linear Model
+
+```{r fit model}
+
+# ###### fit linear mixed model 1 ######
+model <- lmer(eff_id ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
+              data = task_df)
+summary(model)
+
+
+###### fit linear mixed model 2 ######
+fit <- lm(eff_id ~ fitts_id_num * auto_level, data = task_df)
+# summary(fit)
+
+interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              plot.points = TRUE,
+              x.label="Fitts ID", y.label="Effective Fitts ID", 
+              modx.labels = c("low", "med", "high")
+              )
+
 
 ######################### scatterplot ######################### 
 p <- ggscatter(task_df, x = "fitts_id_num", y = "eff_id",
@@ -236,7 +189,7 @@ p <- ggscatter(task_df, x = "fitts_id_num", y = "eff_id",
           conf.int = TRUE,                                  # Add confidence interval
           add.params = list(color = "blue",
                             fill = "lightgray"),
-          xlab = "Fitts ID", ylab = "Effective ID"
+          xlab = "Fitts ID", ylab = "Effective Fitts ID"
           ) 
       # + theme(plot.title = element_text(size = 15, face = "bold"),
       #   axis.title.x = element_text(size = 28, face = "bold"),
@@ -255,46 +208,8 @@ res <- cor.test(task_df$fitts_id_num, task_df$eff_id,
                     method = "pearson")
 res
 
-```
 
-
-## Fit Linear Model
-
-```{r fit model}
-
-###### fit linear mixed model 1 ######
-model <- lmer(eff_id ~ fitts_id_num * auto_num + (1 | part_id),
-              data = task_df)
-summary(model)
-
-# anova(model)
-# interact_plot(model, pred = fitts_id_num, modx = auto_num, interval = TRUE, int.width = 0.8)
-# interact_plot(model, pred = fitts_id_num, modx = auto_num, plot.points = TRUE, interval = TRUE, int.width = 0.8)
-# interact_plot(model, pred = auto_num, modx = fitts_id_num, interval = TRUE, int.width = 0.8)
-
-
-###### fit linear mixed model 2 ######
-fit <- lm(eff_id ~ fitts_id_num * auto_level, data = task_df)
-# summary(fit)
-interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
-              interval = TRUE, int.type = "confidence", int.width = .8,
-              plot.points = TRUE,
-              x.label="Fitts ID", y.label="Effective Fitts ID", 
-              modx.labels = c("low", "med", "high")
-              )
-
-
-###### fit linear mixed model 3 ######
-fit3 <- lm(eff_id ~ auto_num * fitts_id_level, data = task_df)
-# summary(fit3)
-interact_plot(fit3, pred = auto_num, modx = fitts_id_level, 
-              interval = TRUE, int.type = "confidence", int.width = .8,
-              plot.points = TRUE,
-              x.label="Autonomy", y.label="Effective Fitts ID", 
-              modx.labels = c("low", "med1", "med2", "high")
-              )
-
-###### correlation by autonomy group ######
+###### correlation by ring group ######
 correlation_by_group <- task_df %>%
   group_by(auto_level) %>%
   summarise(correlation = cor(fitts_id_num, eff_id))
@@ -303,6 +218,7 @@ print(correlation_by_group)
 
 
 ```
+
 
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

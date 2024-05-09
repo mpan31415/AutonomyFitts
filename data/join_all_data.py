@@ -7,7 +7,12 @@ NUM_PARTICIPANTS = 24
 ###### ring_id order: [1, 2, 3, 4]
 # ROBOT_MOVE_TIMES = [0.8, 1.3, 0.8, 1.3]
 # ROBOT_MOVE_TIMES = [0.6, 1.0, 0.6, 1.0]
-ROBOT_MOVE_TIMES = [0.65, 1.0, 0.65, 1.0]
+
+# ROBOT_MOVE_TIMES = [0.65, 1.0, 0.65, 1.0]
+
+###### actual recorded robot move times ######
+ROBOT_MOVE_TIMES = [0.63, 1.13, 0.68, 1.18]
+
 
 
 ##########################################################################################
@@ -47,7 +52,41 @@ def get_linreg_params():
     raw_df = read_csv(my_file_dir)
     print("\n Finished reading linear regression params! \n")
     return raw_df
-        
+
+
+##########################################################################################
+def replace_outliers_with_mean(series):
+    Q1 = series.quantile(0.25)
+    Q3 = series.quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    # Find the mean of the non-outliers
+    mean_value = series[(series >= lower_bound) & (series <= upper_bound)].mean()
+    # Replace outliers with the mean
+    series = series.apply(lambda x: mean_value if x < lower_bound or x > upper_bound else x)
+    return series
+
+
+##########################################################################################
+def replace_outliers_within_group(df, group_columns, target_column):
+    # Reset index to ensure group_columns are not in the index
+    df = df.reset_index(drop=True)
+
+    # Function to calculate and replace outliers within each group
+    def replace(group):
+        Q1 = group[target_column].quantile(0.25)
+        Q3 = group[target_column].quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        mean_value = group[(group[target_column] >= lower_bound) & (group[target_column] <= upper_bound)][target_column].mean()
+        group[target_column] = group[target_column].apply(lambda x: mean_value if x < lower_bound or x > upper_bound else x)
+        return group
+
+    # Apply the function to each subgroup
+    return df.groupby(group_columns).apply(replace).reset_index(drop=True)
+
 
 ##########################################################################################
 def join_all_data():
@@ -100,9 +139,21 @@ def join_all_data():
     eff_auto_list = [abs((t_list[i] - h_list[i]) / (r_list[i] - h_list[i])) for i in range(len(t_list))]
     concat_df.insert(12, "eff_auto_num", eff_auto_list, True)
     
-    
     # check concatenated dataframe
-    print(concat_df)
+    # print(concat_df)
+    
+    ############# REPLACE OUTLIERS FOR EACH OF THE MEASURES #############
+    cols_not_to_check = ['part_id','trial_number','alpha_id','auto_num','auto_level','ring_id','fitts_id_num','fitts_id_level','robot_mt',
+                         'gender','age','right_handed','trust_tech','video_game','music_instrument']
+    all_cols = list(concat_df.columns)
+    
+    ############ loop through all columns of dataframe and remove outliers ############
+    for col in all_cols:
+        if col in cols_not_to_check:
+            continue
+        else:
+            print("Removing outliers for column = %s" % col)
+            concat_df = replace_outliers_within_group(concat_df, ['auto_num', 'ring_id'], col)
     
     # save to csv file
     dest_path = getcwd() + "\data\\all_data.csv"
