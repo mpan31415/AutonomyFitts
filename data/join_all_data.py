@@ -25,7 +25,9 @@ def get_task_data():
     
     my_file_dir = getcwd() + "\\data\\task\\all_parts_joined.csv"
     raw_df = read_csv(my_file_dir)
-    raw_df = raw_df.iloc[:, 0:18]
+    raw_df = raw_df.iloc[:, 0:19]
+    
+    print(raw_df.columns)
     
     columns_to_drop = ['left_pupil_index','right_pupil_index','left_ave_size','right_ave_size','mt_list']
     raw_df = raw_df.drop(columns=columns_to_drop)

@@ -9,7 +9,7 @@ step 1: get_all_times.py  ->  {/all_times, /half_header_files}
 
 step 2: join_all_parts.py  ->  {all_parts_joined.csv}
 
-step 3: get_final_errors.py  ->  {all_parts_joined.csv}
+step 3: get_errors.py  ->  {all_parts_joined.csv}
 
 step 4: linreg.ipynb (enable plotting to check quality)  ->  {linreg_params.csv}
 
