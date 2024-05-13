@@ -1,5 +1,6 @@
 from pandas import read_csv, concat
 from os import getcwd
+from math import log2
 
 
 NUM_PARTICIPANTS = 24
@@ -13,6 +14,10 @@ NUM_PARTICIPANTS = 24
 ###### actual recorded robot move times ######
 ROBOT_MOVE_TIMES = [0.63, 1.13, 0.68, 1.18]
 
+# ring parameters
+RING_AMPS = [0.1181769, 0.2363539, 0.1181769, 0.2363539]
+RING_WIDTHS = [0.02, 0.02, 0.01, 0.01]
+
 
 
 ##########################################################################################
@@ -20,7 +25,7 @@ def get_task_data():
     
     my_file_dir = getcwd() + "\\data\\task\\all_parts_joined.csv"
     raw_df = read_csv(my_file_dir)
-    raw_df = raw_df.iloc[:, 0:16]
+    raw_df = raw_df.iloc[:, 0:18]
     
     columns_to_drop = ['left_pupil_index','right_pupil_index','left_ave_size','right_ave_size','mt_list']
     raw_df = raw_df.drop(columns=columns_to_drop)
@@ -141,6 +146,48 @@ def join_all_data():
     
     # check concatenated dataframe
     # print(concat_df)
+       
+    
+    # generate lists of linear regression parameters
+    slope_list = []
+    intercept_list = []
+    for i in range(len(part_id_list)):
+        part_id = part_id_list[i]
+        slope = linreg_df[linreg_df['pid']==part_id]['slope'].tolist()[0]
+        intercept = linreg_df[linreg_df['pid']==part_id]['intercept'].tolist()[0]
+        slope_list.append(slope)
+        intercept_list.append(intercept)
+    
+    # get autonomy and fitts ring_id lists, and generate amplitude and width lists for later calc use
+    auto_list = concat_df['auto_num'].tolist()
+    ring_id_list = concat_df['ring_id'].tolist()
+    
+    amp_list = [RING_AMPS[ring_id-1] for ring_id in ring_id_list]
+    width_list = [RING_WIDTHS[ring_id-1] for ring_id in ring_id_list]
+    
+    ###### compute the effective human ID (full amplitude - amp to be executed by the robot autonomously) ######
+    eff_human_id_list = [log2((1-auto_list[i])*amp_list[i]/width_list[i] + 1) for i in range(len(auto_list))]
+    eff_human_mt_list = [intercept_list[i] + slope_list[i]*eff_human_id_list[i] for i in range(len(part_id_list))]
+    
+    concat_df.insert(9, "eff_human_id", eff_human_id_list, True)
+    concat_df.insert(10, "eff_human_mt", eff_human_mt_list, True)
+    
+    
+    ###### compute theoretical move times under series and parallel combinations ######
+    ###### series = sum, parallel = max ######
+    series_mt_list = [eff_human_mt_list[i] + robot_mt_list[i] for i in range(len(eff_human_mt_list))]
+    parallel_mt_list = [max(eff_human_mt_list[i], robot_mt_list[i]) for i in range(len(eff_human_mt_list))]
+    
+    concat_df.insert(11, "series_mt", series_mt_list, True)
+    concat_df.insert(12, "parallel_mt", parallel_mt_list, True)
+    
+    
+    ###### compute subtracted time (recorded move time - reference robot time) ######
+    subtracted_mt_list = [mt_list[i] - robot_mt_list[i] for i in range(len(mt_list))]
+    concat_df.insert(11, "subtracted_mt", subtracted_mt_list, True)
+    
+    # print(concat_df)
+    
     
     ############# REPLACE OUTLIERS FOR EACH OF THE MEASURES #############
     cols_not_to_check = ['part_id','trial_number','alpha_id','auto_num','auto_level','ring_id','fitts_id_num','fitts_id_level','robot_mt',

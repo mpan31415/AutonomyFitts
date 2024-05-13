@@ -1,0 +1,190 @@
+---
+title: "move_times"
+output: html_document
+date: "2024-04-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analysis script for "
+
+```{r load libraries}
+library(readr)
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(stats)
+library(lme4)
+library(dplyr)
+library(ez)
+library(ltm)
+library(interactions)
+```
+
+
+## Extract dataframe from csv file and get (mean, sd) or (mean, se) summary
+
+```{r read csv}
+
+setwd("C:/Users/micha/OneDrive/My_GitHub_Repos/AutonomyFitts/data/")
+task_df <- read_csv("all_data.csv")
+
+auto_levels_order <- c("low_auto", "med_auto", "high_auto")  # Replace these with your actual level names
+fitts_id_levels_order <- c("low_fitts_id", "med_fitts_id1", "med_fitts_id2", "high_fitts_id")  # Replace these with your actual level names
+
+# Reorder the factor levels of "auto_level" according to levels_order
+task_df$auto_level <- factor(task_df$auto_level, levels = auto_levels_order)
+
+# Reorder the factor levels of "fitts_id_level" according to levels_order
+task_df$fitts_id_level <- factor(task_df$fitts_id_level, levels = fitts_id_levels_order)
+
+
+######################### get mean and sd (or se) ######################### 
+task_df %>%
+  group_by(auto_level, ring_id) %>%
+  get_summary_stats(eff_human_mt, type = "mean_sd")
+
+
+
+```
+
+## Plots
+
+```{r do plotting}
+
+bxp1 <- ggboxplot(
+  task_df, x = "ring_id", y = "eff_human_mt",
+  color = "auto_level", palette = "jco"
+  )
+bxp1
+
+```
+
+
+## Check assumptions
+
+```{r check assumptions}
+
+######################### check for outliers ######################### 
+task_df %>%
+  group_by(auto_level, ring_id) %>%
+  identify_outliers(eff_human_mt)
+
+######################### check normality ######################### 
+task_df %>%
+  group_by(auto_level, ring_id) %>%
+  shapiro_test(eff_human_mt)
+
+######################### plot normality ######################### 
+ggqqplot(task_df, "eff_human_mt", ggtheme = theme_bw()) +
+  facet_grid(ring_id ~ auto_level, labeller = "label_both")
+
+
+```
+
+
+## Fit ANOVA
+
+```{r fit model}
+
+######################### Two-way mixed ANOVA test #########################  
+res.aov <- anova_test(
+  data = task_df, dv = eff_human_mt, wid = part_id,
+  within = c(auto_level, ring_id)
+  )
+get_anova_table(res.aov)
+
+
+# #################### Effect of auto_level for each ring_id #################### 
+# one.way <- task_df %>%
+#   group_by(ring_id) %>%
+#   anova_test(dv = eff_human_mt, wid = part_id, within = auto_level) %>%
+#   get_anova_table() %>%
+#   adjust_pvalue(method = "bonferroni")
+# one.way
+# 
+# #################### Effect of ring_id for each auto_level #################### 
+# one.way <- task_df %>%
+#   group_by(auto_level) %>%
+#   anova_test(dv = eff_human_mt, wid = part_id, within = ring_id) %>%
+#   get_anova_table() %>%
+#   adjust_pvalue(method = "bonferroni")
+# one.way
+
+
+#################### Pairwise comparisons between auto_level groups for each ring_id #################### 
+pwc1 <- task_df %>%
+  group_by(fitts_id_level) %>%
+  pairwise_t_test(
+    eff_human_mt ~ auto_level, paired = TRUE,
+    p.adjust.method = "bonferroni"
+    )
+pwc1
+# Create a box plot
+pwc1 <- pwc1 %>% add_xy_position(x = "auto_level", group = "fitts_id_level")
+bxp2 <- ggboxplot(
+  task_df, x = "auto_level", y = "eff_human_mt", 
+  color = "fitts_id_level", palette = "jco"
+) +
+  stat_pvalue_manual(
+    pwc1, color = "fitts_id_level", group.by = "legend.var",
+    bracket.nudge.y = 0.2, step.increase = 0.15, label.size = 3, vjust = 0.1,
+    tip.length = 0, y.position = 20
+  )
+bxp2
+
+
+#################### Pairwise comparisons between ring_id groups for each auto_level #################### 
+pwc2 <- task_df %>%
+  group_by(auto_level) %>%
+  pairwise_t_test(
+    eff_human_mt ~ fitts_id_level, paired = TRUE,
+    p.adjust.method = "bonferroni"
+    )
+pwc2
+# Create a box plot
+pwc2 <- pwc2 %>% add_xy_position(x = "fitts_id_level", group = "auto_level")
+bxp3 <- ggboxplot(
+  task_df, x = "fitts_id_level", y = "eff_human_mt", 
+  color = "auto_level", palette = "jco"
+) +
+  stat_pvalue_manual(
+    pwc2, color = "auto_level", group.by = "legend.var",
+    bracket.nudge.y = 0.2, step.increase = 0.5, label.size = 3, vjust = 0.1,
+    tip.length = 0, y.position = 20
+  )
+bxp3
+
+
+```
+
+
+## Fit Linear Model
+
+```{r fit model}
+
+# ###### fit linear mixed model 1 ######
+model <- lmer(eff_human_mt ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
+              data = task_df)
+summary(model)
+
+
+###### fit linear mixed model 2 ######
+fit <- lm(eff_human_mt ~ fitts_id_num * auto_level, data = task_df)
+# summary(fit)
+
+interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              plot.points = TRUE,
+              x.label="Fitts ID", y.label="Effective Human MT (s)", 
+              modx.labels = c("low", "med", "high")
+              )
+
+
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

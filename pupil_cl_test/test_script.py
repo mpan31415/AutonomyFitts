@@ -22,7 +22,7 @@ class MyEyeTracker():
         self.max_time_seconds = 10.0
         self.watching = False
         
-        self.csv_dir = getcwd()
+        self.csv_dir = getcwd() + '\\pupil_cl_test\\data\\'
         
         
     ##############################################################################
@@ -35,11 +35,15 @@ class MyEyeTracker():
     ##############################################################################
     def run_until_finished(self):
         while self.watching:
-            if time()-self.start_time >= self.max_time_seconds:
+            time_since_start = time()-self.start_time
+            if time_since_start >= self.max_time_seconds:
                 print("\n\n Reached a maximum collection period of %.1f seconds!" % self.max_time_seconds)
                 self.watching = False
                 self.my_eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, self.gaze_data_callback)
                 self.process_pupil_data()
+            else:
+                if time_since_start % 1 == 0:
+                    print("Time elapsed = %d seconds" % int(time_since_start))
 
     ##############################################################################
     def gaze_data_callback(self, gaze_data):
