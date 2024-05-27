@@ -25,7 +25,7 @@ def get_task_data():
     
     my_file_dir = getcwd() + "\\data\\task\\all_parts_joined.csv"
     raw_df = read_csv(my_file_dir)
-    raw_df = raw_df.iloc[:, 0:19]
+    raw_df = raw_df.iloc[:, 0:20]
     
     print(raw_df.columns)
     

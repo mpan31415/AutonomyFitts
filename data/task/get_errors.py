@@ -5,8 +5,12 @@ import matplotlib.pyplot as plt
 
 NUM_PARTICIPANTS = 24
 
+
+###### RING PARAMETERS ######
 FITTS_ID_LIST = [2.788, 3.68, 3.68, 4.623]
+RING_AMPLITUDES = [0.118, 0.236, 0.118, 0.236]
 TARGET_RADIUS_LIST = [0.01, 0.01, 0.005, 0.005]
+#############################
 
 
 ##########################################################################################
@@ -66,7 +70,7 @@ def compute_final_errors(exp_info_df, part_id):
         human_ave_final_err_list.append(human_ave_final_err)
         robot_ave_final_err_list.append(robot_ave_final_err)
 
-    return human_ave_final_err_list, robot_ave_final_err_list, auto_list, ring_id_list
+    return human_ave_final_err_list, robot_ave_final_err_list
 
 
 ##########################################################################################
@@ -79,6 +83,7 @@ def get_human_err_at_robot_finish(exp_info_df, part_id):
     part_exp_info = exp_info_df[exp_info_df['part_id']==part_id].reset_index(drop=True)
     
     human_ave_err_list = []
+    norm_human_ave_err_list = []
     
     ###### loop through all 12 trials ######
     for trial_id in range(1, 13):
@@ -92,6 +97,7 @@ def get_human_err_at_robot_finish(exp_info_df, part_id):
         robot_err_thres = TARGET_RADIUS_LIST[ring_id-1]
 
         human_err_sum = 0
+        norm_human_err_sum = 0
         ###### loop through all 7 motions ######
         for target_id in range(1, 8):
             this_target_df = df[df['target_id']==target_id].reset_index(drop=True)
@@ -101,13 +107,17 @@ def get_human_err_at_robot_finish(exp_info_df, part_id):
             # get the first index where robot gets within error threshold
             thres_index = next((i for i in range(len(robot_err_list)) if robot_err_list[i] < robot_err_thres), len(robot_err_list)-1)
             human_err = human_err_list[thres_index]
+            norm_human_err = human_err / RING_AMPLITUDES[ring_id-1]
             human_err_sum += human_err
+            norm_human_err_sum += norm_human_err
             
         # compute average human error and add to list
         ave_human_err = human_err_sum / 7
+        ave_norm_human_err = norm_human_err / 7
         human_ave_err_list.append(ave_human_err)
+        norm_human_ave_err_list.append(ave_norm_human_err)
         
-    return human_ave_err_list
+    return human_ave_err_list, norm_human_ave_err_list
             
 
 
@@ -119,12 +129,13 @@ def main():
     big_human_err_list = []
     big_robot_err_list = []
     big_hearf_list = []
+    big_norm_hearf_list = []
     
     # loop through all participants
     for part_id in range(1, NUM_PARTICIPANTS+1):
         
-        human_final_err_list, robot_final_err_list, auto_list, ring_id_list = compute_final_errors(exp_info_df, part_id)
-        hearf_list = get_human_err_at_robot_finish(exp_info_df, part_id)
+        human_final_err_list, robot_final_err_list = compute_final_errors(exp_info_df, part_id)
+        hearf_list, norm_hearf_list = get_human_err_at_robot_finish(exp_info_df, part_id)
         
         for he in human_final_err_list:
             big_human_err_list.append(he)
@@ -132,11 +143,14 @@ def main():
             big_robot_err_list.append(re)
         for hearf in hearf_list:
             big_hearf_list.append(hearf)
+        for norm_hearf in norm_hearf_list:
+            big_norm_hearf_list.append(norm_hearf)
     
     # append as 3 columns into the all_parts_joined dataframe
     exp_info_df.insert(9, "human_final_err", big_human_err_list, True)
     exp_info_df.insert(10, "robot_final_err", big_robot_err_list, True)
     exp_info_df.insert(11, "hearf", big_hearf_list, True)
+    exp_info_df.insert(12, "norm_hearf", big_norm_hearf_list, True)
         
     # save to csv file
     dest_path = getcwd() + "\data\\task\\all_parts_joined.csv"
