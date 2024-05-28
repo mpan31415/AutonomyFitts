@@ -1,0 +1,210 @@
+---
+title: "p_trust"
+output: html_document
+date: "2023-09-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analysis script for "
+
+```{r load libraries}
+library(readr)
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(stats)
+library(lme4)
+library(dplyr)
+library(ez)
+library(ltm)
+library(interactions)
+library(lmerTest)
+```
+
+
+## Extract dataframe from csv file and get (mean, sd) or (mean, se) summary
+
+```{r read csv}
+
+setwd("C:/Users/micha/OneDrive/My_GitHub_Repos/AutonomyFitts/data/")
+task_df <- read_csv("all_data.csv")
+
+
+auto_levels_order <- c("low_auto", "med_auto", "high_auto")  # Replace these with your actual level names
+fitts_id_levels_order <- c("low_fitts_id", "med_fitts_id1", "med_fitts_id2", "high_fitts_id")  # Replace these with your actual level names
+
+# Reorder the factor levels of "auto_level" according to levels_order
+task_df$auto_level <- factor(task_df$auto_level, levels = auto_levels_order)
+
+# Reorder the factor levels of "fitts_id_level" according to levels_order
+task_df$fitts_id_level <- factor(task_df$fitts_id_level, levels = fitts_id_levels_order)
+
+```
+
+
+
+# scatterplot and save, and compute correlation
+```{r correlation}
+
+######################### scatterplot ######################### 
+p <- ggscatter(task_df, x = "series_mt", y = "average_mt",
+          add = "reg.line",                                 # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray"),
+          xlab = "Series MT (s)", ylab = "Average MT (s)"
+          ) 
+      # + theme(plot.title = element_text(size = 15, face = "bold"),
+      #   axis.title.x = element_text(size = 28, face = "bold"),
+      #   axis.title.y = element_text(size = 28, face = "bold"),
+      #   axis.text = element_text(size = 24),
+      #   legend.title = element_text(size = 28),
+      #   legend.text = element_text(size = 28),
+      #   legend.position= "none")
+  # stat_cor(method = "pearson", label.x = 1.5, label.y = 7.5)  # Add correlation coefficient
+p
+# ggsave(file="pdfs/perf_trust_corr.pdf", plot=p, width=10, height=6)
+
+######################### correlation test ######################### 
+res <- cor.test(task_df$average_mt, task_df$series_mt, 
+                    method = "pearson")
+res
+
+
+###### correlation by ring group ######
+correlation_by_group <- task_df %>%
+  group_by(ring_id) %>%
+  summarise(correlation = cor(average_mt, series_mt))
+
+print(correlation_by_group)
+
+```
+
+# scatterplot and save, and compute correlation
+```{r correlation}
+
+######################### scatterplot ######################### 
+p <- ggscatter(task_df, x = "parallel_mt", y = "average_mt",
+          add = "reg.line",                                 # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray"),
+          xlab = "Parallel MT (s)", ylab = "Average MT (s)"
+          ) 
+      # + theme(plot.title = element_text(size = 15, face = "bold"),
+      #   axis.title.x = element_text(size = 28, face = "bold"),
+      #   axis.title.y = element_text(size = 28, face = "bold"),
+      #   axis.text = element_text(size = 24),
+      #   legend.title = element_text(size = 28),
+      #   legend.text = element_text(size = 28),
+      #   legend.position= "none")
+  # stat_cor(method = "pearson", label.x = 1.5, label.y = 7.5)  # Add correlation coefficient
+p
+# ggsave(file="pdfs/perf_trust_corr.pdf", plot=p, width=10, height=6)
+
+######################### correlation test ######################### 
+res <- cor.test(task_df$average_mt, task_df$parallel_mt, 
+                    method = "pearson")
+res
+
+
+###### correlation by ring group ######
+correlation_by_group <- task_df %>%
+  group_by(ring_id) %>%
+  summarise(correlation = cor(average_mt, parallel_mt))
+
+print(correlation_by_group)
+
+```
+
+
+## Fit Linear Model
+
+```{r fit model}
+
+###### fit linear mixed model 1 ######
+model <- lmer(average_mt ~ series_mt + (1+auto_num|part_id) + (1|part_id),
+              data = task_df)
+summary(model)
+
+
+# # plot a scatter plot 
+# plot(task_df$arf_pred_human_mt,task_df$arf_human_mt, 
+#      main='Regression Plot', 
+#      xlab='ARF Human MT (s)', ylab='Predicted ARF Human MT (s)', col=task_df$auto_level) 
+#   
+# # plot a regression line 
+# abline(lm(arf_pred_human_mt ~ arf_human_mt, data=task_df), col='red') 
+# 
+# ggplot(task_df,aes(x=arf_human_mt,y=arf_pred_human_mt,col=auto_level))+geom_point()
+
+
+###########################################################
+###### fit linear mixed model 2 (autonomy num) ######
+model <- lmer(average_mt ~ series_mt * auto_num + (1+series_mt|part_id) + (1+auto_num|part_id) + (1|part_id),
+              data = task_df)
+summary(model)
+
+###### for interaction plot ###### 
+fit <- lm(average_mt ~ series_mt * auto_level, data = task_df)
+# summary(fit)
+
+interact_plot(fit, pred = series_mt, modx = auto_level, 
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              plot.points = TRUE,
+              x.label="Series MT (s)", y.label="Average MT (s)", 
+              modx.labels = c("low", "med", "high")
+              )
+
+
+```
+
+
+## Fit Linear Model
+
+```{r fit model}
+
+###### fit linear mixed model 1 ######
+model <- lmer(average_mt ~ parallel_mt + (1+auto_num|part_id) + (1|part_id),
+              data = task_df)
+summary(model)
+
+
+# # plot a scatter plot 
+# plot(task_df$arf_pred_human_mt,task_df$arf_human_mt, 
+#      main='Regression Plot', 
+#      xlab='ARF Human MT (s)', ylab='Predicted ARF Human MT (s)', col=task_df$auto_level) 
+#   
+# # plot a regression line 
+# abline(lm(arf_pred_human_mt ~ arf_human_mt, data=task_df), col='red') 
+# 
+# ggplot(task_df,aes(x=arf_human_mt,y=arf_pred_human_mt,col=auto_level))+geom_point()
+
+
+###########################################################
+###### fit linear mixed model 2 (autonomy num) ######
+model <- lmer(average_mt ~ parallel_mt * auto_num + (1+parallel_mt|part_id) + (1+auto_num|part_id) + (1|part_id),
+              data = task_df)
+summary(model)
+
+###### for interaction plot ###### 
+fit <- lm(average_mt ~ parallel_mt * auto_level, data = task_df)
+# summary(fit)
+
+interact_plot(fit, pred = parallel_mt, modx = auto_level, 
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              plot.points = TRUE,
+              x.label="Parallel MT (s)", y.label="Average MT (s)", 
+              modx.labels = c("low", "med", "high")
+              )
+
+
+```
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

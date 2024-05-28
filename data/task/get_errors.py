@@ -149,8 +149,8 @@ def main():
     # append as 3 columns into the all_parts_joined dataframe
     exp_info_df.insert(9, "human_final_err", big_human_err_list, True)
     exp_info_df.insert(10, "robot_final_err", big_robot_err_list, True)
-    exp_info_df.insert(11, "hearf", big_hearf_list, True)
-    exp_info_df.insert(12, "norm_hearf", big_norm_hearf_list, True)
+    exp_info_df.insert(11, "arf_human_error", big_hearf_list, True)
+    exp_info_df.insert(12, "arf_norm_human_error", big_norm_hearf_list, True)
         
     # save to csv file
     dest_path = getcwd() + "\data\\task\\all_parts_joined.csv"

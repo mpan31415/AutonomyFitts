@@ -167,26 +167,47 @@ def join_all_data():
     amp_list = [RING_AMPS[ring_id-1] for ring_id in ring_id_list]
     width_list = [RING_WIDTHS[ring_id-1] for ring_id in ring_id_list]
     
-    ###### compute the effective human ID (full amplitude - amp to be executed by the robot autonomously) ######
-    eff_human_id_list = [log2((1-auto_list[i])*amp_list[i]/width_list[i] + 1) for i in range(len(auto_list))]
-    eff_human_mt_list = [intercept_list[i] + slope_list[i]*eff_human_id_list[i] for i in range(len(part_id_list))]
+    ###### compute the adjusted human ID (full amplitude - amp to be executed by the robot autonomously) ######
+    # This adjustment below accounts for the fact that higher autonomy (which finished early with high precision)
+    # leads to the effective width for the human being larger than nominal
+    # The amplitude however requires no adjustment
+    adj_width_list = [width_list[i] / (1-auto_list[i]) for i in range(len(auto_list))]
+    adj_human_id_list = [log2(amp_list[i] / adj_width_list[i] + 1) for i in range(len(auto_list))]
+    adj_pred_human_mt_list = [intercept_list[i] + slope_list[i] * adj_human_id_list[i] for i in range(len(part_id_list))]
     
-    concat_df.insert(9, "eff_human_id", eff_human_id_list, True)
-    concat_df.insert(10, "eff_human_mt", eff_human_mt_list, True)
+    human_id_list = [log2(amp_list[i] / width_list[i] + 1) for i in range(len(width_list))]
+    pred_human_mt_list = [intercept_list[i] + slope_list[i] * human_id_list[i] for i in range(len(part_id_list))]
+    
+    concat_df.insert(9, "adj_human_id", adj_human_id_list, True)
+    concat_df.insert(10, "adj_pred_human_mt", adj_pred_human_mt_list, True)
+    concat_df.insert(11, "pred_human_mt", pred_human_mt_list, True)
     
     
     ###### compute theoretical move times under series and parallel combinations ######
     ###### series = sum, parallel = max ######
-    series_mt_list = [eff_human_mt_list[i] + robot_mt_list[i] for i in range(len(eff_human_mt_list))]
-    parallel_mt_list = [max(eff_human_mt_list[i], robot_mt_list[i]) for i in range(len(eff_human_mt_list))]
+    series_mt_list = [pred_human_mt_list[i] + robot_mt_list[i] for i in range(len(pred_human_mt_list))]
+    parallel_mt_list = [max(pred_human_mt_list[i], robot_mt_list[i]) for i in range(len(pred_human_mt_list))]
     
     concat_df.insert(11, "series_mt", series_mt_list, True)
     concat_df.insert(12, "parallel_mt", parallel_mt_list, True)
     
     
-    ###### compute subtracted time (recorded move time - reference robot time) ######
-    subtracted_mt_list = [mt_list[i] - robot_mt_list[i] for i in range(len(mt_list))]
-    concat_df.insert(11, "subtracted_mt", subtracted_mt_list, True)
+    ################# ARF - After Robot Finished #################    
+    ###### compute subtracted time (recorded move time - reference robot time) = arf_human_mt ######
+    arf_human_mt_list = [mt_list[i] - robot_mt_list[i] for i in range(len(mt_list))]
+    concat_df.insert(11, "arf_human_mt", arf_human_mt_list, True)
+    
+    ###### compute remaining human part's ID = arf_human_id ######
+    arf_human_error_list = concat_df['arf_human_error']
+    
+    arf_human_id_list = [log2(arf_human_error_list[i] / width_list[i] + 1) for i in range(len(width_list))]
+    arf_adj_human_id_list = [log2(arf_human_error_list[i] / adj_width_list[i] + 1) for i in range(len(adj_width_list))]
+    
+    arf_pred_human_mt_list = [intercept_list[i] + slope_list[i] * arf_human_id_list[i] for i in range(len(arf_human_id_list))]
+        
+    concat_df.insert(11, "arf_human_id", arf_human_id_list, True)
+    concat_df.insert(12, "arf_adj_human_id", arf_adj_human_id_list, True)
+    concat_df.insert(13, "arf_pred_human_mt", arf_pred_human_mt_list, True)
     
     # print(concat_df)
     

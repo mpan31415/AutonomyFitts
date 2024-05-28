@@ -13,7 +13,7 @@ step 3: get_errors.py  ->  {all_parts_joined.csv}
 
 step 4: linreg.ipynb (enable plotting to check quality)  ->  {linreg_params.csv}
 
-step 5: traj_analysis.ipynb (only for looking at the error trajectories of robot and human)  ->  {None}
+step 5 [vis only]: traj_analysis.ipynb (only for looking at the error trajectories of robot and human)  ->  {None}
 
 
 ############## 2. form ##############
