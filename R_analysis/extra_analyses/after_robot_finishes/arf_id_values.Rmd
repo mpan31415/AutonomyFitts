@@ -21,6 +21,7 @@ library(dplyr)
 library(ez)
 library(ltm)
 library(interactions)
+library(lmerTest)
 ```
 
 
@@ -165,22 +166,22 @@ bxp3
 
 ```{r fit model}
 
-# # ###### fit linear mixed model 1 ######
-# model <- lmer(arf_human_id ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
-#               data = task_df)
-# summary(model)
-# 
-# 
-# ###### fit linear mixed model 2 ######
-# fit <- lm(arf_human_id ~ fitts_id_num * auto_level, data = task_df)
-# # summary(fit)
-# 
-# interact_plot(fit, pred = fitts_id_num, modx = auto_level, 
-#               interval = TRUE, int.type = "confidence", int.width = .8,
-#               plot.points = TRUE,
-#               x.label="Fitts ID", y.label="Move time (s)", 
-#               modx.labels = c("low", "med", "high")
-#               )
+# ###### fit linear mixed model 1 ######
+model <- lmer(arf_human_id ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
+              data = task_df)
+summary(model)
+
+
+###### fit linear mixed model 2 ######
+fit <- lm(arf_human_id ~ fitts_id_num * auto_level, data = task_df)
+# summary(fit)
+
+interact_plot(fit, pred = fitts_id_num, modx = auto_level,
+              interval = TRUE, int.type = "confidence", int.width = .8,
+              plot.points = TRUE,
+              x.label="Fitts ID", y.label="Move time (s)",
+              modx.labels = c("low", "med", "high")
+              )
 
 
 ```
