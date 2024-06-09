@@ -25,7 +25,7 @@ def get_task_data():
     
     my_file_dir = getcwd() + "\\data\\task\\all_parts_joined.csv"
     raw_df = read_csv(my_file_dir)
-    raw_df = raw_df.iloc[:, 0:20]
+    raw_df = raw_df.iloc[:, 0:25]
     
     print(raw_df.columns)
     
@@ -104,6 +104,8 @@ def join_all_data():
         
     # concatenate individual dataframes vertically
     concat_df = concat([task_df, form_df], axis=1)
+    
+    print(concat_df.columns)
     
     
     ####### compute effective ID list using each participant's linear regression parameters #######

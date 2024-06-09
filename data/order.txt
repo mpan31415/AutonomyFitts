@@ -28,3 +28,5 @@ step 2: run demo_analysis.ipynb (just to check age, gender, handedness, not part
 ############## 3. join all data ##############
 
 step 1: run join_all_data.py  ->  {all_data.csv}
+
+step 2: run get_overlap_time.py  ->  {all_data.csv}

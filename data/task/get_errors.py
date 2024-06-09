@@ -12,6 +12,8 @@ RING_AMPLITUDES = [0.118, 0.236, 0.118, 0.236]
 TARGET_RADIUS_LIST = [0.01, 0.01, 0.005, 0.005]
 #############################
 
+TRAJ_RECORD_FREQ = 40   # Hz
+
 
 ##########################################################################################
 def get_raw_data(part_id, trial_id):
@@ -28,6 +30,19 @@ def get_exp_info():
     # print("\n Finished reading raw csv file! \n")
     return raw_df
 
+##########################################################################################
+def get_vel_info(err_list):
+    vel_list = [(err_list[i] - err_list[i+1]) * TRAJ_RECORD_FREQ for i in range(len(err_list)-1)]
+    max_vel = max(vel_list)
+    mean_vel = sum(vel_list) / len(vel_list)
+    return max_vel, mean_vel
+
+##########################################################################################
+def compute_robot_lead(human_list, robot_list):
+    robot_lead_list = [(human_list[i] - robot_list[i]) for i in range(len(human_list))]
+    ave_robot_lead = sum(robot_lead_list) / len(robot_lead_list)
+    return ave_robot_lead
+
 
 ##########################################################################################
 def compute_final_errors(exp_info_df, part_id):
@@ -38,6 +53,13 @@ def compute_final_errors(exp_info_df, part_id):
     
     human_ave_final_err_list = []
     robot_ave_final_err_list = []
+    
+    human_ave_max_vel_list = []
+    human_ave_mean_vel_list = []
+    robot_ave_max_vel_list = []
+    robot_ave_mean_vel_list = []
+    
+    robot_lead_list = []
     
     auto_list = []
     ring_id_list = []
@@ -56,6 +78,12 @@ def compute_final_errors(exp_info_df, part_id):
 
         human_err_sum = 0
         robot_err_sum = 0
+        human_max_vel_sum = 0
+        human_mean_vel_sum = 0
+        robot_max_vel_sum = 0
+        robot_mean_vel_sum = 0
+        robot_lead_sum = 0
+        
         ###### loop through all 7 motions ######
         for target_id in range(1, 8):
             this_target_df = df[df['target_id']==target_id].reset_index(drop=True)
@@ -63,14 +91,35 @@ def compute_final_errors(exp_info_df, part_id):
             robot_err_list = this_target_df['r_err'].tolist()
             human_err_sum += human_err_list[-1]
             robot_err_sum += robot_err_list[-1]
+            # get the maximum velocity for this motion / trajectory
+            human_max_vel, human_mean_vel = get_vel_info(human_err_list)
+            robot_max_vel, robot_mean_vel = get_vel_info(robot_err_list)
+            human_max_vel_sum += human_max_vel
+            human_mean_vel_sum += human_mean_vel
+            robot_max_vel_sum += robot_max_vel
+            robot_mean_vel_sum += robot_mean_vel
+            # add to the robot lead cumulation
+            robot_lead_sum += compute_robot_lead(human_err_list, robot_err_list)
         
         # compute averages of the final error for human and robot (across the 7 reaching motions)
         human_ave_final_err = human_err_sum / 7
         robot_ave_final_err = robot_err_sum / 7
         human_ave_final_err_list.append(human_ave_final_err)
         robot_ave_final_err_list.append(robot_ave_final_err)
+        # compute average of max velocity for both human and robot
+        human_ave_max_vel = human_max_vel_sum / 7
+        human_ave_mean_vel = human_mean_vel_sum / 7
+        robot_ave_max_vel = robot_max_vel_sum / 7
+        robot_ave_mean_vel = robot_mean_vel_sum / 7
+        human_ave_max_vel_list.append(human_ave_max_vel)
+        human_ave_mean_vel_list.append(human_ave_mean_vel)
+        robot_ave_max_vel_list.append(robot_ave_max_vel)
+        robot_ave_mean_vel_list.append(robot_ave_mean_vel)
+        # compute average of robot lead
+        robot_lead = robot_lead_sum / 7
+        robot_lead_list.append(robot_lead)
 
-    return human_ave_final_err_list, robot_ave_final_err_list
+    return human_ave_final_err_list, robot_ave_final_err_list, human_ave_max_vel_list, human_ave_mean_vel_list, robot_ave_max_vel_list, robot_ave_mean_vel_list, robot_lead_list
 
 
 ##########################################################################################
@@ -131,12 +180,20 @@ def main():
     big_hearf_list = []
     big_norm_hearf_list = []
     
+    big_human_max_vel_list = []
+    big_human_mean_vel_list = []
+    big_robot_max_vel_list = []
+    big_robot_mean_vel_list = []
+    
+    big_robot_lead_list = []
+    
     # loop through all participants
     for part_id in range(1, NUM_PARTICIPANTS+1):
         
-        human_final_err_list, robot_final_err_list = compute_final_errors(exp_info_df, part_id)
+        human_final_err_list, robot_final_err_list, human_max_vel_list, human_mean_vel_list, robot_max_vel_list, robot_mean_vel_list, robot_lead_list = compute_final_errors(exp_info_df, part_id)
         hearf_list, norm_hearf_list = get_human_err_at_robot_finish(exp_info_df, part_id)
         
+        # error
         for he in human_final_err_list:
             big_human_err_list.append(he)
         for re in robot_final_err_list:
@@ -145,12 +202,33 @@ def main():
             big_hearf_list.append(hearf)
         for norm_hearf in norm_hearf_list:
             big_norm_hearf_list.append(norm_hearf)
+        
+        # velocity
+        for vel in human_max_vel_list:
+            big_human_max_vel_list.append(vel)
+        for vel in human_mean_vel_list:
+            big_human_mean_vel_list.append(vel)
+        for vel in robot_max_vel_list:
+            big_robot_max_vel_list.append(vel)
+        for vel in robot_mean_vel_list:
+            big_robot_mean_vel_list.append(vel)
+        
+        # robot lead
+        for lead in robot_lead_list:
+            big_robot_lead_list.append(lead)
     
-    # append as 3 columns into the all_parts_joined dataframe
+    # append as 7 columns into the all_parts_joined dataframe
     exp_info_df.insert(9, "human_final_err", big_human_err_list, True)
     exp_info_df.insert(10, "robot_final_err", big_robot_err_list, True)
     exp_info_df.insert(11, "arf_human_error", big_hearf_list, True)
     exp_info_df.insert(12, "arf_norm_human_error", big_norm_hearf_list, True)
+    
+    exp_info_df.insert(13, "human_max_vel", big_human_max_vel_list, True)
+    exp_info_df.insert(14, "human_mean_vel", big_human_mean_vel_list, True)
+    exp_info_df.insert(15, "robot_max_vel", big_robot_max_vel_list, True)
+    exp_info_df.insert(16, "robot_mean_vel", big_robot_mean_vel_list, True)
+    
+    exp_info_df.insert(17, "robot_lead", big_robot_lead_list, True)
         
     # save to csv file
     dest_path = getcwd() + "\data\\task\\all_parts_joined.csv"

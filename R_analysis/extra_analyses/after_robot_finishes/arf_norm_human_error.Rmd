@@ -32,7 +32,7 @@ setwd("C:/Users/micha/OneDrive/My_GitHub_Repos/AutonomyFitts/data/")
 task_df <- read_csv("all_data.csv")
 
 auto_levels_order <- c("low_auto", "med_auto", "high_auto")  # Replace these with your actual level names
-fitts_id_levels_order <- c("low_fitts_id", "med_fitts_id1", "med_fitts_id2", "high_fitts_id")  # Replace these with your actual level names
+fitts_id_levels_order <- c("low_fitts_id", "med_fitts_id2", "med_fitts_id1", "high_fitts_id")  # Replace these with your actual level names
 
 # Reorder the factor levels of "auto_level" according to levels_order
 task_df$auto_level <- factor(task_df$auto_level, levels = auto_levels_order)
@@ -44,7 +44,7 @@ task_df$fitts_id_level <- factor(task_df$fitts_id_level, levels = fitts_id_level
 ######################### get mean and sd (or se) ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  get_summary_stats(norm_hearf, type = "mean_sd")
+  get_summary_stats(arf_norm_human_error, type = "mean_sd")
 
 
 
@@ -55,7 +55,7 @@ task_df %>%
 ```{r do plotting}
 
 bxp1 <- ggboxplot(
-  task_df, x = "ring_id", y = "norm_hearf",
+  task_df, x = "fitts_id_level", y = "arf_norm_human_error",
   color = "auto_level", palette = "jco"
   )
 bxp1
@@ -70,15 +70,15 @@ bxp1
 ######################### check for outliers ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  identify_outliers(norm_hearf)
+  identify_outliers(arf_norm_human_error)
 
 ######################### check normality #########################
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  shapiro_test(norm_hearf)
+  shapiro_test(arf_norm_human_error)
 
 ######################### plot normality ######################### 
-ggqqplot(task_df, "norm_hearf", ggtheme = theme_bw()) +
+ggqqplot(task_df, "arf_norm_human_error", ggtheme = theme_bw()) +
   facet_grid(ring_id ~ auto_level, labeller = "label_both")
 
 
@@ -91,7 +91,7 @@ ggqqplot(task_df, "norm_hearf", ggtheme = theme_bw()) +
 
 ######################### Two-way mixed ANOVA test #########################  
 res.aov <- anova_test(
-  data = task_df, dv = norm_hearf, wid = part_id,
+  data = task_df, dv = arf_norm_human_error, wid = part_id,
   within = c(auto_level, ring_id)
   )
 get_anova_table(res.aov)
@@ -100,7 +100,7 @@ get_anova_table(res.aov)
 # #################### Effect of auto_level for each ring_id #################### 
 # one.way <- task_df %>%
 #   group_by(ring_id) %>%
-#   anova_test(dv = norm_hearf, wid = part_id, within = auto_level) %>%
+#   anova_test(dv = arf_norm_human_error, wid = part_id, within = auto_level) %>%
 #   get_anova_table() %>%
 #   adjust_pvalue(method = "bonferroni")
 # one.way
@@ -108,7 +108,7 @@ get_anova_table(res.aov)
 # #################### Effect of ring_id for each auto_level #################### 
 # one.way <- task_df %>%
 #   group_by(auto_level) %>%
-#   anova_test(dv = norm_hearf, wid = part_id, within = ring_id) %>%
+#   anova_test(dv = arf_norm_human_error, wid = part_id, within = ring_id) %>%
 #   get_anova_table() %>%
 #   adjust_pvalue(method = "bonferroni")
 # one.way
@@ -118,14 +118,14 @@ get_anova_table(res.aov)
 pwc1 <- task_df %>%
   group_by(fitts_id_level) %>%
   pairwise_t_test(
-    norm_hearf ~ auto_level, paired = TRUE,
+    arf_norm_human_error ~ auto_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc1
 # Create a box plot
 pwc1 <- pwc1 %>% add_xy_position(x = "auto_level", group = "fitts_id_level")
 bxp2 <- ggboxplot(
-  task_df, x = "auto_level", y = "norm_hearf", 
+  task_df, x = "auto_level", y = "arf_norm_human_error", 
   color = "fitts_id_level", palette = "jco"
 ) +
   stat_pvalue_manual(
@@ -140,14 +140,14 @@ bxp2
 pwc2 <- task_df %>%
   group_by(auto_level) %>%
   pairwise_t_test(
-    norm_hearf ~ fitts_id_level, paired = TRUE,
+    arf_norm_human_error ~ fitts_id_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc2
 # Create a box plot
 pwc2 <- pwc2 %>% add_xy_position(x = "fitts_id_level", group = "auto_level")
 bxp3 <- ggboxplot(
-  task_df, x = "fitts_id_level", y = "norm_hearf", 
+  task_df, x = "fitts_id_level", y = "arf_norm_human_error", 
   color = "auto_level", palette = "jco"
 ) +
   stat_pvalue_manual(
@@ -166,13 +166,13 @@ bxp3
 ```{r fit model}
 
 # ###### fit linear mixed model 1 ######
-model <- lmer(norm_hearf ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
+model <- lmer(arf_norm_human_error ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
               data = task_df)
 summary(model)
 
 
 ###### fit linear mixed model 2 ######
-fit <- lm(norm_hearf ~ fitts_id_num * auto_level, data = task_df)
+fit <- lm(arf_norm_human_error ~ fitts_id_num * auto_level, data = task_df)
 # summary(fit)
 
 interact_plot(fit, pred = fitts_id_num, modx = auto_level, 

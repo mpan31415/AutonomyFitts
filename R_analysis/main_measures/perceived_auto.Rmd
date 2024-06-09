@@ -21,6 +21,7 @@ library(dplyr)
 library(ez)
 library(ltm)
 library(interactions)
+library(lmerTest)
 ```
 
 
@@ -32,7 +33,7 @@ setwd("C:/Users/micha/OneDrive/My_GitHub_Repos/AutonomyFitts/data/")
 task_df <- read_csv("all_data.csv")
 
 auto_levels_order <- c("low_auto", "med_auto", "high_auto")  # Replace these with your actual level names
-fitts_id_levels_order <- c("low_fitts_id", "med_fitts_id1", "med_fitts_id2", "high_fitts_id")  # Replace these with your actual level names
+fitts_id_levels_order <- c("low_fitts_id", "med_fitts_id2", "med_fitts_id1", "high_fitts_id")  # Replace these with your actual level names
 
 # Reorder the factor levels of "auto_level" according to levels_order
 task_df$auto_level <- factor(task_df$auto_level, levels = auto_levels_order)
@@ -55,7 +56,7 @@ task_df %>%
 ```{r do plotting}
 
 bxp1 <- ggboxplot(
-  task_df, x = "ring_id", y = "per_auto",
+  task_df, x = "fitts_id_level", y = "per_auto",
   color = "auto_level", palette = "jco"
   )
 bxp1
@@ -166,6 +167,8 @@ bxp3
 ```{r fit model}
 
 # ###### fit linear mixed model 1 ######
+# model <- lmer(per_auto ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id) + (1|trust_tech) + (1|video_game) + (1|music_instrument),
+#               data = task_df)
 model <- lmer(per_auto ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
               data = task_df)
 summary(model)
