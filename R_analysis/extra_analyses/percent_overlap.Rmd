@@ -132,7 +132,7 @@ bxp2 <- ggboxplot(
   stat_pvalue_manual(
     pwc1, color = "fitts_id_level", group.by = "legend.var",
     bracket.nudge.y = 0.2, step.increase = 0.15, label.size = 3, vjust = 0.1,
-    tip.length = 0, y.position = 20
+    tip.length = 0, y.position = 100
   )
 bxp2
 
@@ -154,7 +154,7 @@ bxp3 <- ggboxplot(
   stat_pvalue_manual(
     pwc2, color = "auto_level", group.by = "legend.var",
     bracket.nudge.y = 0.2, step.increase = 0.5, label.size = 3, vjust = 0.1,
-    tip.length = 0, y.position = 20
+    tip.length = 0, y.position = 100
   )
 bxp3
 
