@@ -57,9 +57,10 @@ task_df %>%
 
 bxp1 <- ggboxplot(
   task_df, x = "fitts_id_level", y = "per_auto",
-  color = "auto_level", palette = "jco"
+  fill = "auto_level", palette = c("#00AFBB", "#E7B800", "#FC4E07")
   )
 bxp1
+
 
 ```
 
@@ -160,6 +161,45 @@ bxp3
 
 
 ```
+
+
+## Plot with pairwise
+
+```{r fit model}
+
+new_auto_levels_order <- c("low", "med", "high")  # Replace these with your actual level names
+new_fitts_id_levels_order <- c("low", "med1", "med2", "high")  # Replace these with your actual level names
+
+# Reorder the factor levels of "auto_level" according to levels_order
+task_df$Autonomy <- factor(task_df$Autonomy, levels = new_auto_levels_order)
+
+# Reorder the factor levels of "fitts_id_level" according to levels_order
+task_df$Difficulty <- factor(task_df$Difficulty, levels = new_fitts_id_levels_order)
+
+#################### Pairwise comparisons between ring_id groups for each auto_level #################### 
+pwc2 <- task_df %>%
+  group_by(Autonomy) %>%
+  pairwise_t_test(
+    per_auto ~ Difficulty, paired = TRUE,
+    p.adjust.method = "bonferroni"
+    )
+# Create a box plot
+pwc2 <- pwc2 %>% add_xy_position(x = "Difficulty", group = "Autonomy")
+bxp3 <- ggboxplot(
+  task_df, x = "Difficulty", y = "per_auto", 
+  fill = "Autonomy", palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+  xlab = "Difficulty", ylab = "Perceived Autonomy"
+) +
+  stat_pvalue_manual(
+    pwc2, group.by = "legend.var", hide.ns = TRUE,
+    bracket.nudge.y = 0.0, step.increase = 0.1, label.size = 5, vjust = 0.0,
+    tip.length = 0.03, y.position = 11
+  )
+bxp3
+
+
+```
+
 
 
 ## Fit Linear Model

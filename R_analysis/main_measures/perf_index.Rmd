@@ -22,8 +22,6 @@ library(ez)
 library(ltm)
 library(interactions)
 library(lmerTest)
-# library(viridis)
-# library(hrbrthemes)
 ```
 
 
@@ -47,7 +45,7 @@ task_df$fitts_id_level <- factor(task_df$fitts_id_level, levels = fitts_id_level
 ######################### get mean and sd (or se) ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  get_summary_stats(average_mt, type = "mean_sd")
+  get_summary_stats(perf_index, type = "mean_sd")
 
 
 
@@ -58,25 +56,10 @@ task_df %>%
 ```{r do plotting}
 
 bxp1 <- ggboxplot(
-  task_df, x = "fitts_id_level", y = "average_mt",
+  task_df, x = "fitts_id_level", y = "perf_index",
   color = "auto_level", palette = "jco"
   )
 bxp1
-
-
-# # Plot
-# task_df %>%
-#   ggplot( aes(x=fitts_id_level, y=average_mt, fill=auto_level)) +
-#     geom_boxplot() +
-#     scale_fill_viridis(discrete = TRUE, alpha=0.6) +
-#     geom_jitter(color="black", size=0.4, alpha=0.9) +
-#     theme_ipsum() +
-#     theme(
-#       legend.position="none",
-#       plot.title = element_text(size=11)
-#     ) +
-#     ggtitle("A boxplot with jitter") +
-#     xlab("")
 
 ```
 
@@ -88,15 +71,15 @@ bxp1
 ######################### check for outliers ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  identify_outliers(average_mt)
+  identify_outliers(perf_index)
 
 ######################### check normality ######################### 
 task_df %>%
   group_by(auto_level, ring_id) %>%
-  shapiro_test(average_mt)
+  shapiro_test(perf_index)
 
 ######################### plot normality ######################### 
-ggqqplot(task_df, "average_mt", ggtheme = theme_bw()) +
+ggqqplot(task_df, "perf_index", ggtheme = theme_bw()) +
   facet_grid(ring_id ~ auto_level, labeller = "label_both")
 
 
@@ -109,7 +92,7 @@ ggqqplot(task_df, "average_mt", ggtheme = theme_bw()) +
 
 ######################### Two-way mixed ANOVA test #########################  
 res.aov <- anova_test(
-  data = task_df, dv = average_mt, wid = part_id,
+  data = task_df, dv = perf_index, wid = part_id,
   within = c(auto_level, fitts_id_level)
   )
 get_anova_table(res.aov)
@@ -118,7 +101,7 @@ get_anova_table(res.aov)
 # #################### Effect of auto_level for each ring_id #################### 
 # one.way <- task_df %>%
 #   group_by(ring_id) %>%
-#   anova_test(dv = average_mt, wid = part_id, within = auto_level) %>%
+#   anova_test(dv = perf_index, wid = part_id, within = auto_level) %>%
 #   get_anova_table() %>%
 #   adjust_pvalue(method = "bonferroni")
 # one.way
@@ -126,7 +109,7 @@ get_anova_table(res.aov)
 # #################### Effect of ring_id for each auto_level #################### 
 # one.way <- task_df %>%
 #   group_by(auto_level) %>%
-#   anova_test(dv = average_mt, wid = part_id, within = ring_id) %>%
+#   anova_test(dv = perf_index, wid = part_id, within = ring_id) %>%
 #   get_anova_table() %>%
 #   adjust_pvalue(method = "bonferroni")
 # one.way
@@ -136,14 +119,14 @@ get_anova_table(res.aov)
 pwc1 <- task_df %>%
   group_by(fitts_id_level) %>%
   pairwise_t_test(
-    average_mt ~ auto_level, paired = TRUE,
+    perf_index ~ auto_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc1
 # Create a box plot
 pwc1 <- pwc1 %>% add_xy_position(x = "auto_level", group = "fitts_id_level")
 bxp2 <- ggboxplot(
-  task_df, x = "auto_level", y = "average_mt", 
+  task_df, x = "auto_level", y = "perf_index", 
   color = "fitts_id_level", palette = "jco"
 ) +
   stat_pvalue_manual(
@@ -158,14 +141,14 @@ bxp2
 pwc2 <- task_df %>%
   group_by(auto_level) %>%
   pairwise_t_test(
-    average_mt ~ fitts_id_level, paired = TRUE,
+    perf_index ~ fitts_id_level, paired = TRUE,
     p.adjust.method = "bonferroni"
     )
 pwc2
 # Create a box plot
 pwc2 <- pwc2 %>% add_xy_position(x = "fitts_id_level", group = "auto_level")
 bxp3 <- ggboxplot(
-  task_df, x = "fitts_id_level", y = "average_mt", 
+  task_df, x = "fitts_id_level", y = "perf_index", 
   color = "auto_level", palette = "jco"
 ) +
   stat_pvalue_manual(
@@ -183,20 +166,14 @@ bxp3
 
 ```{r fit model}
 
-# ###### fit linear mixed model 0 - EXCLUDING THE INTERACTION TERM ######
-model <- lmer(average_mt ~ auto_num + fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
-              data = task_df)
-summary(model)
-
-
 # ###### fit linear mixed model 1 ######
-model <- lmer(average_mt ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
+model <- lmer(perf_index ~ auto_num * fitts_id_num + (1+auto_num|part_id) + (1+fitts_id_num|part_id) + (1|part_id),
               data = task_df)
 summary(model)
 
 
 ###### fit linear mixed model 2 ######
-fit <- lm(average_mt ~ fitts_id_num * auto_level, data = task_df)
+fit <- lm(perf_index ~ fitts_id_num * auto_level, data = task_df)
 # summary(fit)
 
 interact_plot(fit, pred = fitts_id_num, modx = auto_level, 

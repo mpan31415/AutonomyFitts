@@ -30,3 +30,7 @@ step 2: run demo_analysis.ipynb (just to check age, gender, handedness, not part
 step 1: run join_all_data.py  ->  {all_data.csv}
 
 step 2: run get_overlap_time.py  ->  {all_data.csv}
+
+step 3: run get_perf_index.py  ->  {all_data.py}
+
+step 4: run reverse_id_order.py  ->  {all_data.py}
