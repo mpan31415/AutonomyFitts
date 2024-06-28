@@ -12,10 +12,9 @@ This is a research project conducted by Jiahe Pan at the University of Melbourne
 
 - [ROS2 Workspace](#1)
 - [Eye-Tracking](#2)
-- [Tapping Task](#3)
-- [Dataframes](#4)
-- [Data Analysis](#5)
-- [Paper and Citation Info](#6)
+- [Dataframes](#3)
+- [Data Analysis](#4)
+- [Paper and Citation Info](#5)
 
 
 <br>
@@ -24,19 +23,19 @@ This is a research project conducted by Jiahe Pan at the University of Melbourne
 
 ## ROS2 Workspace
 
-A laptop with <strong>Ubuntu 22.04</strong> and <strong>ROS2 (Humble)</strong> installations are required. The `ros2_ws` workspace contains the following two ROS packages:
-- `ros2_package`
+A laptop with <strong>Ubuntu 22.04</strong> and <strong>ROS2 (Humble)</strong> installations are required. The `ros2_ws` workspace contains the following two ROS packages inside the `/src` folder:
+- `cpp_pubsub`
 - `tutorial_interfaces`
 
-### ros2_package
+### cpp_pubsub
 This package contains the code files for the primary task, including receiving information from and sending control commands to the robot, data logging scripts, and rendering the task scene in RViz. Specifically, it contains the following sub-folders:
 
 | Folder | Description |
 | ------ | ------ |
+| `/cpp_pubsub` | Contains package files including useful functions to process the pupil diameter data, store parameters to run experiments, and the definition of the `DataLogger` Python class. |
 | `/data_logging/csv_logs` | Contains the raw data (`.csv` format) collected from all participants, including a header file for each participant with the calculated task performances for each trial condition. |
 | `/launch` | Contains ROS launch files to run the nodes defined in the `/src` folder, including launching the controller with both the [Gazebo](https://docs.ros.org/en/foxy/Tutorials/Advanced/Simulators/Ignition/Ignition.html) simulator and the real robot, and to start the RViz rendering of the task. |
-| `/ros2_package` | Contains package files including useful functions to generate the trajectories, parameters to run experiments, and the definition of the `DataLogger` Python class. |
-| `/scripts` | Contains the definition of the `TrajRecorder` Python class, used for receiving and saving control commands and robot poses into temporary data structures, before logging the data to csv files using a `DataLogger` instance. |
+| `/scripts` | Contains the definition of the `TrajRecorder` Python class, used for receiving and saving control commands and robot poses into temporary data structures, before logging the data to csv files using a `DataLogger` instance. Also contains the `fitts_task_tobii.py` Python script used for scheduling the sequence of targets and running the experiment. |
 | `/src` | Contains C++ source code for the ROS nodes used, including class definitions of the `GazeboController` and `RealController` for controlling the robot in simulation and the real world respectively, the `PositionTalker` for reading the position of the Falcon joystick, and the `MarkerPublisher` for publishing visualization markers into the RViz rendering.  |
 | `/urdf` | Contains an auto-generated URDF file of the Franka Emika robot arm.  |
 
@@ -54,7 +53,7 @@ This packcage contains custom ROS message and service definitions. Specifically,
 
 ## Eye-Tracking
 
-The implementation uses a laptop with <strong>Windows 11</strong> installation.
+The implementation uses a laptop with <strong>Ubuntu 22.04</strong> and <strong>ROS2 (Humble)</strong> installations.
 
 In order to use the Tobii eye-tracker, first install the required SDK from PyPI:
 ```shell script
@@ -85,80 +84,48 @@ To disconnect:
 ```python
 my_eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, gaze_data_callback)
 ```
-For more details of implementation, please refer to `rhythm_method.py` located in the `/experiment/secondary task/` directory.
+For more details of implementation, please refer to `fitts_task_tobii.py` located in the `/cpp_pubsub/scripts/` directory.
 
 
 <br>
 
 <a id='3'></a>
 
-## Tapping Task
+## Dataframes
 
-The implementation uses a laptop with <strong>Windows 11</strong> installation.
+The data logged throughout each of the experimental sessions are written to `.csv` files. These include both the main measures of interest and the initial demographics information collected at the start of each session. The final processed `.csv` files are all located in the `/data` directory. Their descriptions and file names are summarized below:
 
-The <strong>dual-task method</strong> is adopted in this project to capture cognitive load objectively, in addition to using pupil diameter. Specifically, "[The Rhythm Method](https://onlinelibrary.wiley.com/doi/abs/10.1002/acp.3100)" is employed as the secondary task, which involves a rhythmic tapping at a given tempo.
-
-The rhythm files are in `.wav` format, and can be generated from any software (e.g. GarageBand on IOS devices).
-
-The implementation of the method in this project uses the following Python libraries:
-```python
-from keyboard import read_key       # to record key taps on the keyboard
-from playsound import playsound     # to play the rhythm for participants' reference
-```
-which can be installed via PyPI:
-```shell script
-pip install keyboard playsound
-```
-For more details of implementation, please refer to `rhythm_method.py` located in the `/experiment/secondary task/` directory.
+| Measure | Description |
+| ------ | ------ |
+| Movement Times | The metric for task performance, measured as the movement time between consecutive targets around the ring |
+| Pupil Diameter | Pupil diameter (mm) for both left and right eyes, and averaged across them |
+| Perceived Autonomy | Participants' perceived level of robot autonomy, rated on a 10-point Likert scale |
+| Perceived Trust | Participants' self-reported trust using a 10-point Likert scale |
+| NASA-TLX | Self-reported cognitive load levels across all 6 aspects of the [NASA-TLX](https://www.sciencedirect.com/science/article/abs/pii/S0166411508623869) questionnaire |
+| MDMT |  Self-reported trust levels across all 8 dimensions of the [MDMT](https://research.clps.brown.edu/SocCogSci/Measures/CurrentVersion_MDMT.pdf) questionnaire |
 
 
 <br>
 
 <a id='4'></a>
 
-## Dataframes
+## Data Analysis
 
-The data logged throughout each of the experimental sessions are written to `.csv` files. These include both the main measures of interest and the initial demographics information collected at the start of each session. The final processed `.csv` files are all located in the `/experiment/grouped_dataframes/` directory. Their descriptions and file names are summarized below:
+The data analysis was performed in [RStudio](https://posit.co/download/rstudio-desktop/), leveraging existing libraries in the [R programming langauge](https://www.r-project.org/about.html). All R scripts are located in the `/R_analysis` directory, which has the following three sub-folders:
+- `main_measures`: Individual analysis of autonomy's effect on each of the main measures using ANOVAs and linear models
+- `extra_analyses`: Additional analyses through auxiliary measures using ANOVAs and linear models, and correlation analyses between the measures
 
-| Measure | Description | Filename |
-| ------ | ------ | ------ |
-| Trajectory Tracking Error | RMSE error (cm) between the reference and recorded trajectories of each trial | `grouped_traj_err.csv` |
-| Rhythm Tapping Error | Normalized percentage error (%) of the inter-tap interval lengths (relative to participant's baseline) | `grouped_tapping_err.csv` |
-| Pupil Diameter | Pupil diameter (mm) for both left and right eyes, and averaged across them | `grouped_pupil.csv` |
-| Perceived Autonomy | Participants' perceived level of robot autonomy, rated on a 10-point Likert scale | `grouped_p_auto.csv` |
-| Perceived Trust | Participants' self-reported trust using a 10-point Likert scale | `grouped_p_trust.csv` |
-| NASA-TLX | Self-reported cognitive load levels across all 6 aspects of the [NASA-TLX](https://www.sciencedirect.com/science/article/abs/pii/S0166411508623869) questionnaire | `grouped_tlx.csv` |
-| MDMT |  Self-reported trust levels across all 8 dimensions of the [MDMT](https://research.clps.brown.edu/SocCogSci/Measures/CurrentVersion_MDMT.pdf) questionnaire | `grouped_mdmt.csv` |
+Plots are also generated in R, and the code are embedded within the above R scripts.
 
 
 <br>
 
 <a id='5'></a>
 
-## Data Analysis
-
-The data analysis was performed in [RStudio](https://posit.co/download/rstudio-desktop/), leveraging existing libraries in the [R programming langauge](https://www.r-project.org/about.html). All R scripts used are located in the `/analysis/R_scripts/` directory, which has the following three sub-folders:
-- `indiv_measures`: Individual analysis of autonomy's effect on each of the measures using ANOVAs
-- `interactions`: Analysis of correlations and interaction effects between the measures and autonomy conditions
-- `learning_effect`: Identification of possible learning effects for the repeated measures within each round using Linear Mixed Models
-
-Plots are also generated in R, and the code are embedded within the above R scripts. The preliminary plots are located in the `/analysis/plots/` directory. The actual plots used in the paper (in `.jpg` format) can be found in the `/analysis/pdf_plots/pdf_to_jpg/` directory.
-
-
-<br>
-
-<a id='6'></a>
-
 ## Paper and Citation Info
 
-The manuscript and supplementary video can be found on [IEEEXplore](https://ieeexplore.ieee.org/abstract/document/10517390).
+The manuscript and supplementary video can be found on [TODO](https://ieeexplore.ieee.org/abstract/document/10517390).
 If you find our work useful, please consider citing it using:
 ```
-@article{pan2024effects,
-  title={Effects of Shared Control on Cognitive Load and Trust in Teleoperated Trajectory Tracking},
-  author={Pan, Jiahe and Eden, Jonathan and Oetomo, Denny and Johal, Wafa},
-  journal={IEEE Robotics and Automation Letters},
-  year={2024},
-  publisher={IEEE}
-}
+[TODO]
 ```
