@@ -192,10 +192,12 @@ bxp3 <- ggboxplot(
 ) +
   stat_pvalue_manual(
     pwc2, group.by = "legend.var", hide.ns = TRUE,
-    bracket.nudge.y = 0.0, step.increase = 0.1, label.size = 5, vjust = 0.0,
-    tip.length = 0.03, y.position = 11
+    bracket.nudge.y = -0.1, step.increase = 0.05, label.size = 4, vjust = 0.6,
+    tip.length = 0.02, y.position = 10.5
   )
 bxp3
+
+ggsave(file="perceived_auto.png", plot=bxp3, width=5, height=4)
 
 
 ```

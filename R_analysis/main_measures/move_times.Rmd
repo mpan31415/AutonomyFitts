@@ -179,6 +179,47 @@ bxp3
 ```
 
 
+## Plot with pairwise
+
+```{r fit model}
+
+new_auto_levels_order <- c("low", "med", "high")  # Replace these with your actual level names
+new_fitts_id_levels_order <- c("low", "med1", "med2", "high")  # Replace these with your actual level names
+
+# Reorder the factor levels of "auto_level" according to levels_order
+task_df$Autonomy <- factor(task_df$Autonomy, levels = new_auto_levels_order)
+
+# Reorder the factor levels of "fitts_id_level" according to levels_order
+task_df$Difficulty <- factor(task_df$Difficulty, levels = new_fitts_id_levels_order)
+
+#################### Pairwise comparisons between ring_id groups for each auto_level #################### 
+pwc2 <- task_df %>%
+  group_by(Autonomy) %>%
+  pairwise_t_test(
+    average_mt ~ Difficulty, paired = TRUE,
+    p.adjust.method = "bonferroni"
+    )
+# Create a box plot
+pwc2 <- pwc2 %>% add_xy_position(x = "Difficulty", group = "Autonomy")
+bxp3 <- ggboxplot(
+  task_df, x = "Difficulty", y = "average_mt", 
+  fill = "Autonomy", palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+  xlab = "Difficulty", ylab = "Movement Time (s)"
+) +
+  stat_pvalue_manual(
+    pwc2, group.by = "legend.var", hide.ns = TRUE,
+    bracket.nudge.y = -0.1, step.increase = 0.07, label.size = 4, vjust = 0.7,
+    tip.length = 0.02, y.position = 3
+  )
+bxp3
+
+ggsave(file="movement_time.png", plot=bxp3, width=5, height=7)
+
+
+```
+
+
+
 ## Fit Linear Model
 
 ```{r fit model}
@@ -205,6 +246,11 @@ interact_plot(fit, pred = fitts_id_num, modx = auto_level,
               x.label="Fitts ID", y.label="Move time (s)", 
               modx.labels = c("low", "med", "high")
               )
+
+
+library(MuMIn)
+r.squaredGLMM(fit)
+
 
 
 ```
