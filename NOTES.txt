@@ -9,7 +9,6 @@
 
 
 
-cd A
 ################################ TO RUN IN REAL LIFE ################################
 
 - Connect ethernet
@@ -18,4 +17,4 @@ cd A
 
 1. ros2 launch cpp_pubsub real.launch.py (joint_trajectory_controller, position_talker, traj_recorder)
 
-2. ros2 run cpp_pubsub real_controller (real_controller)
+2. ros2 launch cpp_pubsub controller.launch.py (real_controller)
