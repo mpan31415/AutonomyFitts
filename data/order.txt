@@ -3,7 +3,7 @@
 ==> Make sure to change the "NUM_PARTICIPANTS" variable to be correct
 
 
-############## 1. task ##############
+############## 1. /task ##############
 
 step 1: get_all_times.py  ->  {/all_times, /half_header_files}
 
@@ -13,10 +13,10 @@ step 3: get_errors.py  ->  {all_parts_joined.csv}
 
 step 4: linreg.ipynb (enable plotting to check quality)  ->  {linreg_params.csv}
 
-step 5 [vis only]: traj_analysis.ipynb (only for looking at the error trajectories of robot and human)  ->  {None}
+step 5 [visualization]: traj_analysis.ipynb (visualize the error trajectories of robot and human)  ->  {None}
 
 
-############## 2. form ##############
+############## 2. /form ##############
 
 [NEED: demo_form_raw.csv, main_form_raw.csv]
 
@@ -26,6 +26,8 @@ step 2: run demo_analysis.ipynb (just to check age, gender, handedness, not part
 
 
 ############## 3. join all data ##############
+
+NOTE: each of the steps below adds new columns to all_data.csv and overwrites it
 
 step 1: run join_all_data.py  ->  {all_data.csv}
 

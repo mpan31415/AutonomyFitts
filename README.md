@@ -108,6 +108,8 @@ Note, the raw data logged from the task, including recordings for each individua
 - `/all_times` - preprocessed header files for each participant, including all 24 trials
 - `/half_header_files` - the preprocessed header files with trials 1-12 removed, since they were the practice trials according to the experimental design and therefore were not used for the main analysis
 
+For the exact steps on how the data preprocessing, refer to `order.txt` located in the `/data` folder.
+
 
 <br>
 
