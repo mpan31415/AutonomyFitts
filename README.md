@@ -93,7 +93,7 @@ For more details of implementation, please refer to `fitts_task_tobii.py` locate
 
 ## Dataframes
 
-The data logged throughout each of the experimental sessions are written to `.csv` files. These include both the main measures of interest and the initial demographics information collected at the start of each session. The final processed `.csv` files are all located in the `/data` directory. Their descriptions and file names are summarized below:
+The data logged throughout each of the experimental sessions are written to `.csv` files. These include both the main measures of interest and the initial demographics information collected at the start of each session. The final processed `.csv` files are all located in the `/data` directory. Their descriptions are summarized below:
 
 | Measure | Description |
 | ------ | ------ |
@@ -103,6 +103,10 @@ The data logged throughout each of the experimental sessions are written to `.cs
 | Perceived Trust | Participants' self-reported trust using a 10-point Likert scale |
 | NASA-TLX | Self-reported cognitive load levels across all 6 aspects of the [NASA-TLX](https://www.sciencedirect.com/science/article/abs/pii/S0166411508623869) questionnaire |
 | MDMT |  Self-reported trust levels across all 8 dimensions of the [MDMT](https://research.clps.brown.edu/SocCogSci/Measures/CurrentVersion_MDMT.pdf) questionnaire |
+
+Note, the raw data logged from the task, including recordings for each individual trial and an overall header file across all trials for each participant, are located in `/ros2_ws/src/cpp_pubsub/data_logging/csv_logs`. These raw `csv` files are then preprocessed using the `get_all_times.py` script inside the `/data/task` folder, where they are then stored into the following two subfolders:
+- `/all_times` - preprocessed header files for each participant, including all 24 trials
+- `/half_header_files` - the preprocessed header files with trials 1-12 removed, since they were the practice trials according to the experimental design and therefore were not used for the main analysis
 
 
 <br>
@@ -115,7 +119,7 @@ The data analysis was performed in [RStudio](https://posit.co/download/rstudio-d
 - `main_measures`: Individual analysis of autonomy's effect on each of the main measures using ANOVAs and linear models
 - `extra_analyses`: Additional analyses through auxiliary measures using ANOVAs and linear models, and correlation analyses between the measures
 
-Plots are also generated in R, and the code are embedded within the above R scripts.
+All scripts load `/data/all_data.csv` as the dataframe containing all the data from the study. Plots are also generated in R, and the code are embedded within the above R scripts.
 
 
 <br>
