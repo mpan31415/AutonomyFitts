@@ -14,7 +14,7 @@ def get_all_data():
 def rename_auto_level(auto_level: str):
     match auto_level:
         case "low_auto":
-            return "low"
+            return "none"
         case "med_auto":
             return "med"
         case "high_auto":
@@ -26,13 +26,13 @@ def rename_auto_level(auto_level: str):
 def rename_id_level(id_level: str):
     match id_level:
         case "low_fitts_id":
-            return "low"
+            return "1"
         case "med_fitts_id1":
-            return "med2"
+            return "3"
         case "med_fitts_id2":
-            return "med1"
+            return "2"
         case "high_fitts_id":
-            return "high"
+            return "4"
         case _:
             return "none"
         

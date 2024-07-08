@@ -121,7 +121,7 @@ pwc1 <- task_df %>%
   group_by(fitts_id_level) %>%
   pairwise_t_test(
     per_auto ~ auto_level, paired = TRUE,
-    p.adjust.method = "bonferroni"
+    p.adjust.method = "holm"
     )
 pwc1
 # Create a box plot
@@ -143,7 +143,7 @@ pwc2 <- task_df %>%
   group_by(auto_level) %>%
   pairwise_t_test(
     per_auto ~ fitts_id_level, paired = TRUE,
-    p.adjust.method = "bonferroni"
+    p.adjust.method = "holm"
     )
 pwc2
 # Create a box plot

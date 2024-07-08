@@ -128,7 +128,7 @@ pwc1 <- task_df %>%
   group_by(fitts_id_level) %>%
   pairwise_t_test(
     tlx_ave ~ auto_level, paired = TRUE,
-    p.adjust.method = "bonferroni"
+    p.adjust.method = "holm"
     )
 pwc1
 # Create a box plot
@@ -150,7 +150,7 @@ pwc2 <- task_df %>%
   group_by(auto_level) %>%
   pairwise_t_test(
     tlx_ave ~ fitts_id_level, paired = TRUE,
-    p.adjust.method = "bonferroni"
+    p.adjust.method = "holm"
     )
 pwc2
 # Create a box plot
@@ -173,8 +173,8 @@ bxp3
 
 ```{r fit model}
 
-new_auto_levels_order <- c("low", "med", "high")  # Replace these with your actual level names
-new_fitts_id_levels_order <- c("low", "med1", "med2", "high")  # Replace these with your actual level names
+new_auto_levels_order <- c("none", "med", "high")  # Replace these with your actual level names
+new_fitts_id_levels_order <- c("1", "2", "3", "4")  # Replace these with your actual level names
 
 # Reorder the factor levels of "auto_level" according to levels_order
 task_df$Autonomy <- factor(task_df$Autonomy, levels = new_auto_levels_order)
@@ -187,23 +187,23 @@ pwc2 <- task_df %>%
   group_by(Autonomy) %>%
   pairwise_t_test(
     tlx_ave ~ Difficulty, paired = TRUE,
-    p.adjust.method = "bonferroni"
+    p.adjust.method = "holm"
     )
 # Create a box plot
 pwc2 <- pwc2 %>% add_xy_position(x = "Difficulty", group = "Autonomy")
 bxp3 <- ggboxplot(
   task_df, x = "Difficulty", y = "tlx_ave", 
   fill = "Autonomy", palette = c("#00AFBB", "#E7B800", "#FC4E07"),
-  xlab = "Difficulty", ylab = "Averaged NASA-TLX"
+  xlab = "Ring No.", ylab = "Averaged NASA-TLX"
 ) +
   stat_pvalue_manual(
     pwc2, group.by = "legend.var", hide.ns = TRUE,
     bracket.nudge.y = -0.1, step.increase = 0.05, label.size = 4, vjust = 0.7,
-    tip.length = 0.02, y.position = 16
+    tip.length = 0.02, y.position = 16, color = "Autonomy"
   )
 bxp3
 
-ggsave(file="tlx_average.png", plot=bxp3, width=5, height=4)
+ggsave(file="tlx_average.pdf", plot=bxp3, width=5, height=5)
 
 
 ```
