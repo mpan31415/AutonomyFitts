@@ -4,8 +4,8 @@ This is a research project conducted by Jiahe Pan at the University of Melbourne
 
 
 ## Project Links
-- Project site: [TODO]
-- Demo video: [TODO]
+- Project site: [https://sites.google.com/view/autonomyfitts/home](https://sites.google.com/view/autonomyfitts/home)
+- Demo video: Coming Soon!
 
 
 ## Contents
@@ -133,5 +133,5 @@ All scripts load `/data/all_data.csv` as the dataframe containing all the data f
 The manuscript and supplementary video can be found on [TODO](https://ieeexplore.ieee.org/abstract/document/10517390).
 If you find our work useful, please consider citing it using:
 ```
-[TODO]
+Coming Soon!
 ```
