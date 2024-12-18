@@ -130,8 +130,13 @@ All scripts load `/data/all_data.csv` as the dataframe containing all the data f
 
 ## Paper and Citation Info
 
-The manuscript and supplementary video can be found on [TODO](https://ieeexplore.ieee.org/abstract/document/10517390).
-If you find our work useful, please consider citing it using:
+The paper has been accepted as a full paper at HRI 2025. The preprint can be found on [arXiv](https://arxiv.org/abs/2412.05412).
+If you find our work useful, please consider citing it:
 ```
-Coming Soon!
+@article{pan2024using,
+  title={Using Fitts' Law to Benchmark Assisted Human-Robot Performance},
+  author={Pan, Jiahe and Eden, Jonathan and Oetomo, Denny and Johal, Wafa},
+  journal={arXiv preprint arXiv:2412.05412},
+  year={2024}
+}
 ```
