@@ -21,7 +21,7 @@ year = {2025}
 
 ## Project Links
 - Project site: [https://sites.google.com/view/autonomyfitts/home](https://sites.google.com/view/autonomyfitts/home)
-- Demo video: Coming Soon!
+- Demo video: (YouTube) https://www.youtube.com/watch?v=ISkNramzxpM&ab_channel=connect
 
 
 ## Contents
