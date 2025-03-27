@@ -1,6 +1,22 @@
-# AutonomyCLTrust
+# Using Fitts' Law to Benchmark Assisted Human-Robot Performance
 
-This is a research project conducted by Jiahe Pan at the University of Melbourne, Australia, under supervision of Jonathan Eden, Denny Oetomo and Wafa Johal. We utilize a shared control teleoperated target reaching task based on [Fitts' Law](http://www2.psychology.uiowa.edu/faculty/mordkoff/InfoProc/pdfs/Fitts%201954.pdf) to investigate the effects of task difficulty and robot autonomy on the human operator's task performance, cognitive load and trust. We use the [Franka Emika robot arm](https://franka.de/research) and the [Novint Falcon haptic device](https://www.forcedimension.com/company/about) for the target reaching task, and [Tobii eye trackers](https://www.tobii.com/solutions/scientific-research) for one of the cognitive load measures. Experiments are conducted with 24 participants. 
+This is a research project conducted by [Jiahe Pan](https://mpan31415.github.io/) at the University of Melbourne, Australia, under supervision of Jonathan Eden, Denny Oetomo and Wafa Johal. We utilize a shared control teleoperated target reaching task based on [Fitts' Law](http://www2.psychology.uiowa.edu/faculty/mordkoff/InfoProc/pdfs/Fitts%201954.pdf) to investigate the effects of task difficulty and robot autonomy on the human operator's task performance, cognitive load and trust. We use the [Franka Emika robot arm](https://franka.de/research) and the [Novint Falcon haptic device](https://www.forcedimension.com/company/about) for the target reaching task, and [Tobii eye trackers](https://www.tobii.com/solutions/scientific-research) for one of the cognitive load measures. Experiments are conducted with 24 participants. 
+
+<a id='5'></a>
+
+## Paper and Citation Info
+
+The paper was accepted as a full paper at HRI 2025, and can be found [here](https://dl.acm.org/doi/10.5555/3721488.3721517).
+If you find our work useful, please consider citing it:
+```
+@inproceedings{pan2025using,
+author = {Pan, Jiahe and Eden, Jonathan and Oetomo, Denny and Johal, Wafa},
+title = {Using Fitts' Law to Benchmark Assisted Human-Robot Performance},
+booktitle = {Proceedings of the 2025 ACM/IEEE International Conference on Human-Robot Interaction},
+pages = {203–212},
+year = {2025}
+}
+```
 
 
 ## Project Links
@@ -122,22 +138,3 @@ The data analysis was performed in [RStudio](https://posit.co/download/rstudio-d
 - `extra_analyses`: Additional analyses through auxiliary measures using ANOVAs and linear models, and correlation analyses between the measures
 
 All scripts load `/data/all_data.csv` as the dataframe containing all the data from the study. Plots are also generated in R, and the code are embedded within the above R scripts.
-
-
-<br>
-
-<a id='5'></a>
-
-## Paper and Citation Info
-
-The paper was accepted as a full paper at HRI 2025, and can be found [here](https://dl.acm.org/doi/10.5555/3721488.3721517).
-If you find our work useful, please consider citing it:
-```
-@inproceedings{pan2025using,
-author = {Pan, Jiahe and Eden, Jonathan and Oetomo, Denny and Johal, Wafa},
-title = {Using Fitts' Law to Benchmark Assisted Human-Robot Performance},
-booktitle = {Proceedings of the 2025 ACM/IEEE International Conference on Human-Robot Interaction},
-pages = {203–212},
-year = {2025}
-}
-```
